@@ -21,6 +21,7 @@ package HighLevelControl
         Imm11t0,
         Imm4t0,
         SType,
+        UType,
         NONE,
     } immSrc;
 
@@ -34,9 +35,10 @@ package HighLevelControl
         Imm     = 1'b1,
     } aluSrcB;
 
-    typedef enum logic {
+    typedef enum logic[1:0] {
         ALU,
-        Memory
+        Memory,
+        Rs2
     } resultSrc;
 
     typedef enum logic[2:0] {

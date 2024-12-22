@@ -40,7 +40,7 @@ module controller #(
     assign funct3 = Instr[14:12];
     assign funct7 = Instr[31:25];
 
-    controlSignals Controller, RType, IType, ISType, LType;
+    controlSignals Controller, RType, IType, ISType, LType, Stype, UType;
 
     //Transition to enum to simplify
     assign {PCUpdate, RegWrite, MemEn, MemWrite, ByteEn} = Controller.signals;
@@ -48,18 +48,25 @@ module controller #(
     assign ALUOp = Controller.ALUOp;
     assign ALUSrcA = Controller.AluSrcA;
     assign ALUSrcB = Controller.AluSrcB;
+    assign ResultSrc = Controller.ResultSrc;
+    assign TruncSrc = Controller.TruncSrc;
 
     //R-Type Controller
-    rTypeController RTypeController(.funct7, .funct3, .Controller(RType));
-    iTypeController ITypeController(.Immb11t0, .funct3, .Controller(IType));
-    isTypeController ISTypeController(.funct7, .funct3, .Controller(ISType));
+    rTypeController     RTypeController(.funct7, .funct3, .Controller(RType));
+    iTypeController     ITypeController(.Immb11t0, .funct3, .Controller(IType));
+    isTypeController    ISTypeController(.funct7, .funct3, .Controller(ISType));
+    lTypeController     LTypeController(.funct3, .Controller(LType));
+    sTypeController     STypeController(.funct3, .Controller(SType));
+    uTypeController     UTypeController(.opcode, .Controller(UType));
 
     always_comb begin
         casex(opcode)
             7'b0110011: Controller = RType;
             7'b0010011: Controller = IType;
             7'b0010011: Controller = ISType;
-            //7'b0000011: Controller = LType; 
+            7'b0000011: Controller = LType; 
+            7'b0100011: Controller = SType; 
+            7'b0x10111: Controller = UType; 
 
             default: begin
                 Controller.signals = 'x;
@@ -200,7 +207,7 @@ module lTypeController(
             3'b100: Controller.TruncSrc = truncSrc::BYTE_UNSIGNED;
             3'b101: Controller.TruncSrc = truncSrc::HALF_WORD_UNSIGNED;
             
-            default: Controller.ALUOp = aluOperation::NONE;
+            default: Controller.TruncSrc = truncSrc::NONE;
             
         endcase
     end
@@ -230,7 +237,35 @@ module sTypeController(
             3'b001:  Controller.signals = SIGNAL_SIZE'b0_0_1_1_0011; //SH
             3'b010:  Controller.signals = SIGNAL_SIZE'b0_0_1_1_1111; //SW
             
-            default: Controller.ALUOp = aluOperation::NONE;
+            default: Controller.signals = 'x;
+            
+        endcase
+    end
+endmodule
+
+//
+module uTypeController(
+    input logic[6:0] opcode,
+    
+    output controlSignals Controller
+);
+    import HighLevelControl::*;
+
+    //{PCUpdate, RegWrite, MemEn, MemWrite, ByteEn}
+    Controller.signals = SIGNAL_SIZE'b0_0_1_1_0000; 
+
+    assign Controller.ALUSrcA = aluSrcA::OldPC;
+    assign Controller.ALUSrcB = aluSrcB::Imm;
+    assign Controller.ALUOp = aluOperation::ADD;
+    assign Controller.ImmSrc = immSrc::UType;
+    assign Controller.TruncSrc = NONE;
+    
+    always_comb begin
+        casex(opcode)
+            7'b0110111: Controller.ResultSrc = resultSrc::Rs2; //LUI
+            7'b0010111: Controller.ResultSrc = resultSrc::ALU; //AUIPC
+            
+            default: Controller.ResultSrc = 'x;
             
         endcase
     end
