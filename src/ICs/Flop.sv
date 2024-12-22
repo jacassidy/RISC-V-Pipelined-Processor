@@ -1,3 +1,5 @@
+//James Kaden Cassidy jkc.cassidy@gmail.com 12/19/2024
+
 module flopR #(
     WIDTH = 32
 ) (

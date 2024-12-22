@@ -1,3 +1,5 @@
+//James Kaden Cassidy jkc.cassidy@gmail.com 12/20/2024
+
 module mux #(
     parameter WIDTH = 32,
     parameter INPUT_BUS_COUNT,
