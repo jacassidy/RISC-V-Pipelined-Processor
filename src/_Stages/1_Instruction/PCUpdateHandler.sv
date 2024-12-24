@@ -25,21 +25,21 @@ module pcUpdateHandler #(
         if(PCSrc_C === pcSrc::Branch_C || PCSrc_C === pcSrc::Jump_C) begin
             if(PredictionCorrect_C && PCSrc_R === pcSrc::Jump_R) begin
                 //If branch/jump predicted correctly and Jump_R in R stage, take the jump instead
-                PCNext = PCpImm_R;
+                PCNext = {PCpImm_R[BIT_COUNT-1:1], 1'b0};
             end else begin
                 //If branch/jump was wrong then itll be flushed, take current
                 if(PCSrc_C === pcSrc::Branch_C) begin
-                    PCNext = UpdatedPC_C;
+                    PCNext = {UpdatedPC_C[BIT_COUNT-1:1], 1'b0};
                 end
 
                 if(PCSrc_C === pcSrc::Jump_C) begin
-                    PCNext = AluAdd_C;
+                    PCNext = {AluAdd_C[BIT_COUNT-1:1], 1'b0};
                 end
             end
         end
         //R stage second Prio
-        else if(PCSrc_R === pcSrc::Jump_R)  PCNext = PCpImm_R;
-        else                                PCNext = PCp4;
+        else if(PCSrc_R === pcSrc::Jump_R)  PCNext = {PCpImm_R[BIT_COUNT-1:1], 1'b0};
+        else                                PCNext = {PCp4[BIT_COUNT-1:1], 1'b0};
     end
 
 endmodule

@@ -91,7 +91,11 @@ module controller #(
             7'b0x10111: Controller = UType; 
             7'b110x111: Controller = JType;
 
-            default:    Controller = 'x;
+            default: begin
+                Controller = 'x;
+                //{RegWrite, MemEn, MemWrite,      ByteEn}
+                Controller.signals = SIGNAL_SIZE'b0_0_0_000;
+            end
         endcase
     end
     
@@ -307,33 +311,22 @@ module uTypeController(
 
     assign Controller.ConditionalPCSrc  = conditionalPCSrc::PCp4;
 
+    assign Controller.ALUSrcA       = 'x;
+    assign Controller.ALUSrcB       = 'x;
+    assign Controller.ALUOp         = 'x;
+
     assign Controller.ImmSrc            = immSrc::UType;
-    assign Controller.UpdatedPCSrc      = 'x;
+    assign Controller.UpdatedPCSrc      = updatedPCSrc::PCpImm;
 
     assign Controller.ResultSrc         = resultSrc::Compute;
     assign Controller.TruncSrc          = NONE;
 
     always_comb begin
         casex(opcode)
-            7'b0110111: begin //LUI
-                Controller.ALUSrcA       = 'x;
-                Controller.ALUSrcB       = 'x;
-                Controller.ALUOp         = 'x;
-                Controller.ComputeSrc    = computeSrc::ALUOpB; 
-            end
-            7'b0010111: begin //AUIPC
-                Controller.ALUSrcA       = aluSrcA::OldPC;
-                Controller.ALUSrcB       = aluSrcB::Imm;
-                Controller.ALUOp         = aluOperation::ADD;
-                Controller.ComputeSrc    = computeSrc::ALU; 
-            end
+            7'b0110111: Controller.ComputeSrc    = computeSrc::ALUOpB; //LUI
+            7'b0010111: Controller.ComputeSrc    = computeSrc::UpdatedPC; //AUIPC
             
-            default: begin
-                Controller.ALUSrcA       = 'x;
-                Controller.ALUSrcB       = 'x;
-                Controller.ALUOp         = 'x;
-                Controller.ComputeSrc    = 'x; 
-            end
+            default:    Controller.ComputeSrc    = 'x; 
             
         endcase
     end
@@ -375,7 +368,7 @@ module jTypeController(
 
                 Controller.ImmSrc           = immSrc::Imm11t0;
 
-                Controller.ALUSrcA          = aluSrcA::OldPC;
+                Controller.ALUSrcA          = aluSrcA::Rd1;
                 Controller.ALUSrcB          = aluSrcB::Imm;
             end
             
