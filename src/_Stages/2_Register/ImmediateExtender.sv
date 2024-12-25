@@ -1,16 +1,17 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/21/2024
 
+import HighLevelControl::*;
+
 `define WORD_SIZE 32
 
 module immediateExtender #(
     BIT_COUNT
 ) (
-    input HighLevelControl::immSrc ImmSrc,
-    input logic[WORD_SIZE-1:0] Instr,
+    input   immSrc                  ImmSrc,
+    input   logic[`WORD_SIZE-1:0]   Instr,
     
-    output logic[BIT_COUNT-1:0] Imm
+    output  logic[BIT_COUNT-1:0]    Imm
 );
-    import HighLevelControl::immSrc::*;
 
     logic[4:0]      Immb4t0, shamt;
     logic[11:5]     Immb11t5;

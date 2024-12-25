@@ -9,24 +9,21 @@ module computeCore #(
     input   logic                       reset,
 
     //To handle memory / chache externally
-    output  logic[BIT_COUNT-1 : 0]      PC,       //Instruction Cache
+    output  logic[BIT_COUNT-1:0]        PC,       //Instruction Cache
 
-    output  logic MemEn,
-    output  logic MemWrite,                          //Command Memory to write
-    output  logic[(WORD_SIZE/8)-1:0]    ByteEn,         //Bytes to be writen
-    output  logic[BIT_COUNT-1 : 0]      MemAdr,           //Memory Adress
-    output  logic[WORD_SIZE-1 : 0]      MemWriteData,      //Memory to be saved
+    output  logic                       MemEn,
+    output  logic                       MemWrite,       //Command Memory to write
+    output  logic[(`WORD_SIZE/8)-1:0]   ByteEn,         //Bytes to be writen
+    output  logic[BIT_COUNT-1:0]        MemAdr,         //Memory Adress
+    output  logic[`WORD_SIZE-1:0]       MemWriteData,   //Memory to be saved
 
-    input   logic[WORD_SIZE-1 : 0]      Instr,
-    input   logic[WORD_SIZE-1 : 0]      MemReadData,
+    input   logic[`WORD_SIZE-1:0]       Instr,
+    input   logic[`WORD_SIZE-1:0]       MemReadData
 );
-    import HighLevelControl::*;
 
-    logic RegWrite;
+    logic[$clog2(BIT_COUNT)-1:0] rs1Adr, rs2Adr, rd1Adr;
 
-    logic[$clog2(BIT_COUNT) - 1 : 0] rs1Adr, rs2Adr, rd1Adr;
-
-    logic[BIT_COUNT-1 : 0] PCNext, PCp4, OldPC, Rd1, Rs1, Rs2, 
+    logic[BIT_COUNT-1:0] PCNext, PCp4, OldPC, Rd1, Rs1, Rs2, 
             Imm, PCpImm, UpdatedPC, ALUOpA, ALUOpB, ALUResult, ComputeResult, Result;
 
     //Controller Signals
@@ -40,8 +37,8 @@ module computeCore #(
     HighLevelControl::immSrc            ImmSrc;
     HighLevelControl::updatedPCSrc      UpdatedPCSrc;
 
-    HighLevelControl::aluSrcA           AluSrcA;
-    HighLevelControl::aluSrcB           AluSrcB;
+    // HighLevelControl::aluSrcA           AluSrcA;
+    HighLevelControl::aluSrcB           ALUSrcB;
     HighLevelControl::aluOperation      ALUOp;
 
     HighLevelControl::computeSrc        ComputeSrc;
@@ -57,7 +54,7 @@ module computeCore #(
     generate
         if (BIT_COUNT == 32) begin
             
-        end else if (BIT_COUNT = 64) begin
+        end else if (BIT_COUNT == 64) begin
 
         end else begin
             //initial begin
@@ -69,13 +66,13 @@ module computeCore #(
     ////                        **** I STAGE ****                       ////
 
     //PC Source Select Mux implemented with branch prediction
-    pcUpdateHandler PCUpdateHandler(.PCSrcPostConditional_C(PCSrcPostConditional), 
-            .PCSrc_R(PCSrc), .Predict(0), .Prediction(0),
+    pcUpdateHandler PCUpdateHandler(.PCSrc_R(PCSrc), 
+            .PCSrcPostConditional_C(PCSrcPostConditional), .Predict(0), .Prediction(0),
             .PredictionCorrect_C(0), .PCp4, .AluAdd_C(ALUResult), .PCpImm_R(PCpImm), 
             .UpdatedPC_C(UpdatedPC), .PCNext);
 
     //Program Counter
-    flopR #(WIDTH = BIT_COUNT) ProgramCounter(.clk, .reset, .D(PCNext), .Q(PC));
+    flopR #(.WIDTH(BIT_COUNT)) ProgramCounter(.clk, .reset, .D(PCNext), .Q(PC));
 
     assign PCp4 = PC + 4;
 
@@ -86,49 +83,41 @@ module computeCore #(
 
     ////                        **** R STAGE ****                       ////
     //Controller
-    controller #(BIT_COUNT = BIT_COUNT) Controller(.Instr,
-        .ConditionalPCSrc, .RegWrite, .ImmSrc, .UpdatedPCSrc, .ALUSrcA, .ALUSrcB, .ALUOp, .ComputeSrc,
-        .MemEn, .MemWrite, .ByteEn, .ResultSrc, .TruncSrc);
+    controller #(.BIT_COUNT(BIT_COUNT)) Controller(.Instr,
+        .PCSrc, .ConditionalPCSrc, .RegWrite, .ImmSrc, .UpdatedPCSrc, .ALUSrcB, 
+        .ALUOp, .ComputeSrc, .MemEn, .MemWrite, .ByteEn, .ResultSrc, .TruncSrc);
 
     //Register File
-    registerFile #(BIT_COUNT = BIT_COUNT, REGISTER_COUNT = BIT_COUNT) RegisterFile(
+    registerFile #(.BIT_COUNT(BIT_COUNT), .REGISTER_COUNT(BIT_COUNT)) RegisterFile(
         .clk, .reset, .WriteEnable(RegWrite), .rs1Adr, .rs2Adr, .rd1Adr, .Rd1, .Rs1, .Rs2
-    )
+    );
 
     //Immediate Extender
-    immediateExtender #(BIT_COUNT = BIT_COUNT) ImmediateExtender(.ImmSrc,
-            .Instr, .Imm);
+    immediateExtender #(.BIT_COUNT(BIT_COUNT)) ImmediateExtender(.ImmSrc, .Instr, .Imm(Imm));
 
     //Jump / Branch Adder
-    PCpImm = Imm + OldPC;
+    assign PCpImm = Imm + OldPC;
 
     //Updated PC Mux
     always_comb begin
         casex(UpdatedPCSrc)
-            updatedPCSrc::PCpImm:   UpdatedPC = PCpImm;
-            updatedPCSrc::PCp4:     UpdatedPC = PCp4;
+            HighLevelControl::PCpImm:   UpdatedPC = PCpImm;
+            HighLevelControl::PCp4:     UpdatedPC = PCp4;
 
-            default:                UpdatedPC = 'x;
+            default:  UpdatedPC = 'x;
         endcase
     end
 
     ////ALU Source Selection Muxes////
     
     //ALU Src A Mux
-    always_comb begin
-        casex(AluSrcA)
-            aluSrcA::Rs1:   ALUOpA = Rs1;
-            aluSrcA::OldPC: ALUOpA = OldPC;
-
-            default:        ALUOpA = 'x;
-        endcase
-    end
+    assign ALUOpA = Rs1;
 
     //ALU Src B Mux
     always_comb begin
-        casex(AluSrcB)
-            aluSrcB::Rs2: ALUOpB = Rs2;
-            aluSrcB::Imm: ALUOpB = Imm;
+        casex(ALUSrcB)
+            HighLevelControl::Rs2: ALUOpB = Rs2;
+            HighLevelControl::Imm: ALUOpB = Imm;
             default:      ALUOpB = 'x;
         endcase
     end
@@ -136,7 +125,7 @@ module computeCore #(
     ////                        **** C STAGE ****                       ////
 
     //ALU
-    behavioralAlu #(BIT_COUNT = BIT_COUNT) ALU(.ALUOp, .ALUOpA, .ALUOpB, .Zero,
+    behavioralAlu #(.BIT_COUNT(BIT_COUNT)) ALU(.ALUOp, .ALUOpA, .ALUOpB, .Zero,
                 .oVerflow, .Negative, .Carry, .ALUResult);
 
     branchHandler BranchHandler(.PCSrc_C(PCSrc), .ConditionalPCSrc_C(ConditionalPCSrc), 
@@ -146,9 +135,9 @@ module computeCore #(
     //Compute Result Select Mux
     always_comb begin
         casex(ComputeSrc)
-            computeSrc::ALU:        ComputeResult = ALUResult;
-            computeSrc::ALUOpB:     ComputeResult = ALUOpB;
-            computeSrc::UpdatedPC:  ComputeResult = UpdatedPC;
+            HighLevelControl::ALU:        ComputeResult = ALUResult;
+            HighLevelControl::ALUOpB:     ComputeResult = ALUOpB;
+            HighLevelControl::UpdatedPC:  ComputeResult = UpdatedPC;
 
             default: ComputeResult = 'x;
 
@@ -167,16 +156,16 @@ module computeCore #(
     always_comb begin
         casex(ResultSrc)
             //**** ONLY WORKS FOR 32 BIT MEMORY****//
-            resultSrc::MemData: Result = {(BIT_COUNT-32) * MemReadData[31], MemReadData}; 
-            resultSrc::ALU:     Result = ComputeResult;
+            HighLevelControl::Memory:     Result = {(BIT_COUNT-32) * MemReadData[31], MemReadData}; 
+            HighLevelControl::Compute:    Result = ComputeResult;
 
-            default:            Result = 'x;
+            default:    Result = 'x;
         endcase
     end
 
     ////                        **** W STAGE ****                       ////
 
     //Write Result to Register
-    truncator(#BIT_COUNT = BIT_COUNT) Truncator(.TruncSrc, .Input(Result), .TruncResult(Rd1));
+    truncator #(.BIT_COUNT(BIT_COUNT)) Truncator(.TruncSrc, .Input(Result), .TruncResult(Rd1));
     
 endmodule

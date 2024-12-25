@@ -1,5 +1,7 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/20/2024
 
+import HighLevelControl::*;
+
 module behavioralAlu #(
     BIT_COUNT = 32
 ) (
@@ -13,9 +15,8 @@ module behavioralAlu #(
     output logic                            Negative,
     output logic                            Carry,
     
-    output logic[BIT_COUNT - 1 : 0]         ALUResult,
+    output logic[BIT_COUNT - 1 : 0]         ALUResult
 );
-    import HighLevelControl::aluOperation::*;
 
     assign Negative            = ALUResult[31];
     assign Zero                = ~(|ALUResult);
@@ -64,16 +65,22 @@ module behavioralAlu #(
                 oVerflow    = 0;
             end
             SLTU: begin //SLTU
-                Carry       = (ALUOpA - ALUOpB)[BIT_COUNT];
+                logic[BIT_COUNT:0] Sub;
+                Sub         = ALUOpA - ALUOpB;
+
+                Carry       = Sub[BIT_COUNT];
                 ALUResult   = {(BIT_COUNT-1) * 1'b0 , Carry};
                 oVerflow    = ~(ALUOpA[BIT_COUNT-1] ^ ALUOpB[BIT_COUNT-1] ^ 1'b1) 
                                     & (ALUOpA[BIT_COUNT-1] ^ ALUResult[BIT_COUNT-1]);
                 
             end
             SLT: begin //SLT
-                Carry       = (ALUOpA - ALUOpB)[BIT_COUNT];
+                logic[BIT_COUNT:0] Sub;
+                Sub         = ALUOpA - ALUOpB;
+
+                Carry       = Sub[BIT_COUNT];
                 //If result is negative (sign inverted by overflow)
-                ALUResult   = {(BIT_COUNT-1) * 1'b0 , (ALUOpA - ALUOpB)[BIT_COUNT-1] ^ oVerflow};
+                ALUResult   = {(BIT_COUNT-1) * 1'b0 , Sub[BIT_COUNT-1] ^ oVerflow};
                 oVerflow    = ~(ALUOpA[BIT_COUNT-1] ^ ALUOpB[BIT_COUNT-1] ^ 1'b1) 
                                     & (ALUOpA[BIT_COUNT-1] ^ ALUResult[BIT_COUNT-1]);
                 

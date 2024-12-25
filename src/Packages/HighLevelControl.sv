@@ -1,16 +1,16 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/20/2024
 
-package HighLevelControl
+package HighLevelControl;
 
     typedef enum logic[1:0] {
-        PCp4,
+        PCp4_I,
         Jump_R,      //PCpImm
         Jump_C,      //AluAdd
         Branch_C     //UpdatedPC
     } pcSrc;
 
-    typedef enum logic[1:0] {
-        NONE,
+    typedef enum logic[2:0] {
+        NO_BRANCH,
         BEQ_C,       //UpdatedPC
         BNE_C,
         BLT_C,
@@ -33,14 +33,14 @@ package HighLevelControl
         PCp4
     } updatedPCSrc;
 
-    typedef enum logic {
-        Rs1     = 1'b0, 
-        OldPC   = 1'b1
-    } aluSrcA;
+    // typedef enum logic {
+    //     Rs1     = 1'b0, 
+    //     OldPC   = 1'b1
+    // } aluSrcA;
 
     typedef enum logic {  
         Rs2     = 1'b0,
-        Imm     = 1'b1,
+        Imm     = 1'b1
     } aluSrcB;
 
     typedef enum logic[3:0] {
@@ -64,10 +64,9 @@ package HighLevelControl
         UpdatedPC
     } computeSrc;
 
-    typedef enum logic[1:0] {
+    typedef enum logic {
         Compute,
-        Memory,
-        Rs2
+        Memory
     } resultSrc;
 
     typedef enum logic[2:0] {
@@ -76,7 +75,7 @@ package HighLevelControl
         WORD,
         BYTE_UNSIGNED,
         HALF_WORD_UNSIGNED,
-        NONE
+        NO_TRUNC
     } truncSrc;
 
 endpackage

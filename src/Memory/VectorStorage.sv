@@ -7,30 +7,35 @@ module vectorStorage #(
     parameter MEMORY_SIZE_BITS,
     parameter ADRESS_SIZE
 ) (
-    input logic MemEn,
-    input logic WriteEnable,
-    input logic[(WORD_SIZE/8)-1:0] ByteEn,
-    input logic[ADRESS_SIZE-1:0] MemoryAdress,
-    input logic[WORD_SIZE-1:0] InputData,
+    
+    input   logic                       MemEn,
+    input   logic                       WriteEnable,
+    input   logic[(`WORD_SIZE/8)-1:0]   ByteEn,
 
-    output logic[WORD_SIZE-1:0] MemData
+    input   logic[ADRESS_SIZE-1:0]      MemoryAdress,
+    input   logic[`WORD_SIZE-1:0]       InputData,
+
+    output  logic[`WORD_SIZE-1:0]       MemData
 );
 
     logic[MEMORY_SIZE_BITS-1:0] Memory;
 
-    assign MemData = MemEn ? Memory[MemoryAdress+WORD_SIZE:MemoryAdress] : 'x;
+    assign MemData = MemEn ? Memory[MemoryAdress+`WORD_SIZE-:`WORD_SIZE] : 'x;
 
-    always_ff begin
+    always_latch begin
         if (WriteEnable & MemEn) begin
-            for (int i = 0; i < (WORD_SIZE/8); i++) begin
-                if (ByteEn[i]) MemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
+            for (int i = 0; i < (`WORD_SIZE/8); i++) begin
+                if (ByteEn[i]) begin
+                    logic[`WORD_SIZE-1:0] LocalMemData;
+                    LocalMemData = Memory[MemoryAdress+`WORD_SIZE-:`WORD_SIZE];
+                    LocalMemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
+                end
             end
         end
     end
 
     initial begin
-        if (MEMORY_FILE_PATH !== "")
-            $readmemb(MEMORY_FILE_PATH, Memory);
+        if (MEMORY_FILE_PATH !== "") $readmemb(MEMORY_FILE_PATH, Memory);
     end
     
 endmodule
