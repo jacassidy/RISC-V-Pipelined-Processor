@@ -66,9 +66,9 @@ module computeCore #(
     ////                        **** I STAGE ****                       ////
 
     //PC Source Select Mux implemented with branch prediction
-    pcUpdateHandler PCUpdateHandler(.PCSrc_R(PCSrc), 
-            .PCSrcPostConditional_C(PCSrcPostConditional), .Predict(0), .Prediction(0),
-            .PredictionCorrect_C(0), .PCp4, .AluAdd_C(ALUResult), .PCpImm_R(PCpImm), 
+    pcUpdateHandler #(.BIT_COUNT(BIT_COUNT)) PCUpdateHandler(.PCSrc_R(PCSrc), 
+            .PCSrcPostConditional_C(PCSrcPostConditional), .Predict(1'b0), .Prediction({BIT_COUNT * 1'b0}),
+            .PredictionCorrect_C(1'b0), .PCp4, .AluAdd_C(ALUResult), .PCpImm_R(PCpImm), 
             .UpdatedPC_C(UpdatedPC), .PCNext);
 
     //Program Counter

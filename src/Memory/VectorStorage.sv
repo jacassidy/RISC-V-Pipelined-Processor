@@ -35,7 +35,7 @@ module vectorStorage #(
     end
 
     initial begin
-        if (MEMORY_FILE_PATH !== "") $readmemb(MEMORY_FILE_PATH, Memory);
+        if (MEMORY_FILE_PATH !== "") $readmemh(MEMORY_FILE_PATH, Memory);
     end
     
 endmodule

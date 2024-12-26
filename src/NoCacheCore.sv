@@ -15,8 +15,8 @@ module noCacheCore #(
     logic[31:0] Instr;
 
     vectorStorage #(.MEMORY_FILE_PATH(""), .MEMORY_SIZE_BITS(32 * 100), .ADRESS_SIZE(BIT_COUNT)) 
-        InstructionMemory(.MemEn(1), .WriteEnable(0), 
-        .ByteEn(0), .MemoryAdress(InstrAdr), .InputData(0), .MemData(Instr));
+        InstructionMemory(.MemEn(1'b1), .WriteEnable(1'b0), 
+        .ByteEn(4'b0), .MemoryAdress(InstrAdr), .InputData(`WORD_SIZE'b0), .MemData(Instr));
     
     //Data Memory
     logic MemEn, MemWrite;
