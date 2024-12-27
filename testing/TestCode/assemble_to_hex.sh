@@ -41,11 +41,11 @@ for (( i=0; i<${#little_endian_hex}; i+=8 )); do
     byte2=${chunk:2:2}
     byte3=${chunk:4:2}
     byte4=${chunk:6:2}
-    big_endian_hex+="${byte4}${byte3}${byte2}${byte1}"
+    big_endian_hex+="${byte4}${byte3}${byte2}${byte1}\n"
 done
 
 # 5) Write the big-endian hex to the output file
-echo "$big_endian_hex" > "$output_file"
+echo -e "$big_endian_hex" > "$output_file"
 
 # 6) Clean up temporary files
 rm "$temp_o" "$temp_bin"

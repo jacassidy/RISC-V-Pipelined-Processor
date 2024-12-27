@@ -88,7 +88,7 @@ module computeCore #(
         .ALUOp, .ComputeSrc, .MemEn, .MemWrite, .ByteEn, .ResultSrc, .TruncSrc);
 
     //Register File
-    registerFile #(.BIT_COUNT(BIT_COUNT), .REGISTER_COUNT(BIT_COUNT)) RegisterFile(
+    registerFile #(.BIT_COUNT(BIT_COUNT), .REGISTER_COUNT(`WORD_SIZE)) RegisterFile(
         .clk, .reset, .WriteEnable(RegWrite), .rs1Adr, .rs2Adr, .rd1Adr, .Rd1, .Rs1, .Rs2
     );
 

@@ -1,0 +1,30 @@
+xxxxxxxx
+xxxxxxxx
+0000001E  // ADD: 10 + 20 = 30 (0x1E)
+xxxxxxxx
+xxxxxxxx
+0000000A  // SUB: 20 - 10 = 10 (0x0A)
+xxxxxxxx
+xxxxxxxx
+00000000  // AND: 0xF0 & 0x0F = 0
+xxxxxxxx
+xxxxxxxx
+000000FF  // OR:  0xF0 | 0x0F = 0xFF
+xxxxxxxx
+xxxxxxxx
+000000FF  // XOR: 0xAA ^ 0x55 = 0xFF
+xxxxxxxx
+xxxxxxxx
+00000010  // SLL: 0x1 << 4 = 0x10
+xxxxxxxx
+xxxxxxxx
+00000004  // SRL: 0x10 >> 2 = 0x4
+xxxxxxxx
+xxxxxxxx
+FFFFFFFC  // SRA: -16 >> 2 = -4 (sign extended)
+xxxxxxxx
+xxxxxxxx
+00000001  // SLT: 5 < 10 = 1
+xxxxxxxx
+xxxxxxxx
+00000001  // SLTU: 0xFFFFFFFF < 1 (unsigned) = 1

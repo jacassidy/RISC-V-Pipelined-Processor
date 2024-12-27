@@ -14,7 +14,7 @@ module noCacheCore #(
     logic[BIT_COUNT-1:0] InstrAdr;
     logic[31:0] Instr;
 
-    vectorStorage #(.MEMORY_FILE_PATH(""), .MEMORY_SIZE_BITS(32 * 100), .ADRESS_SIZE(BIT_COUNT)) 
+    vectorStorage #(.MEMORY_FILE_PATH(INSTRUCTION_MEMORY_FILE_NAME), .MEMORY_SIZE_WORDS(128), .ADRESS_SIZE(BIT_COUNT)) 
         InstructionMemory(.MemEn(1'b1), .WriteEnable(1'b0), 
         .ByteEn(4'b0), .MemoryAdress(InstrAdr), .InputData(`WORD_SIZE'b0), .MemData(Instr));
     
@@ -24,7 +24,7 @@ module noCacheCore #(
     logic[BIT_COUNT-1:0] MemAdr;
     logic[(`WORD_SIZE/8)-1:0] ByteEn;
 
-    vectorStorage #(.MEMORY_FILE_PATH(""), .MEMORY_SIZE_BITS(32 * 100), .ADRESS_SIZE(BIT_COUNT)) 
+    vectorStorage #(.MEMORY_FILE_PATH(""), .MEMORY_SIZE_WORDS(5), .ADRESS_SIZE(BIT_COUNT)) 
         DataMemory(.MemEn, .WriteEnable(MemWrite), 
         .ByteEn, .MemoryAdress(MemAdr), .InputData(MemWriteData), .MemData(MemReadData));
 

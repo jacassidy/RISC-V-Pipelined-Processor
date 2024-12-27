@@ -1,0 +1,29 @@
+00000005 // LI: x1 = 5
+0000000A // LI: x2 = 10
+0000000F // ADD: x3 = x1 + x2 = 5 + 10 = 15
+00000005 // SUB: x4 = x2 - x1 = 10 - 5 = 5
+000000F0 // LI: x5 = 0xF0
+0000000F // LI: x6 = 0x0F
+00000000 // AND: x7 = x5 & x6 = 0xF0 & 0x0F = 0
+000000FF // OR: x8 = x5 | x6 = 0xF0 | 0x0F = 0xFF
+000000FF // XOR: x9 = x5 ^ x6 = 0xF0 ^ 0x0F = 0xFF
+00000001 // LI: x10 = 1
+00000004 // LI: x11 = 4
+00000010 // SLL: x12 = x10 << x11 = 1 << 4 = 0x10
+00000010 // LI: x13 = 0x10
+00000001 // SRL: x14 = x13 >> x11 = 16 >> 4 = 1
+FFFFFFF0 // LI: x15 = -16 (0xFFFFFFF0)
+FFFFFFFF // SRA: x16 = x15 >> x11 (arithmetic shift, -16 >> 4 = -1)
+00000001 // SLT: x17 = (x1 < x2) = (5 < 10) = 1
+FFFFFFFF // LI: x18 = -1 (0xFFFFFFFF)
+00000001 // LI: x19 = 1
+00000000 // SLTU: x20 = (unsigned x18 < x19) = (0xFFFFFFFF < 1) = 0
+0000002A // ADDI: x21 = x0 + 42 = 42
+00000058 // JAL: x1 = PC + 4 = 0x40 (PC at JAL = 0x3C)
+0000007B // LI: x22 = 123
+0000006C // RET: x1 = PC + 4 = 0x44 (PC at RET = 0x40)
+xxxxxxxx // Add upper immediate
+0000DEAD // LI: x30 = 0xDEAD
+00000064 // J End
+12345000 // LUI: x23 = 0x12345000
+00001070 // AUIPC: x24 = PC + 17

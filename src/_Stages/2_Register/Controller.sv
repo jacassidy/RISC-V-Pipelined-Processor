@@ -325,7 +325,6 @@ module uTypeController(
     assign Controller.PCSrc             = HighLevelControl::PCp4_I;
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
-    assign Controller.ALUSrcB           = HighLevelControl::aluSrcB'('x);
     assign Controller.ALUOp             = HighLevelControl::aluOperation'('x);
 
     assign Controller.ImmSrc            = HighLevelControl::UType;
@@ -336,10 +335,19 @@ module uTypeController(
 
     always_comb begin
         casex(opcode)
-            7'b0110111: Controller.ComputeSrc    = HighLevelControl::ALUOpB; //LUI
-            7'b0010111: Controller.ComputeSrc    = HighLevelControl::UpdatedPC; //AUIPC
+            7'b0110111: begin
+                Controller.ALUSrcB      = HighLevelControl::Imm;
+                Controller.ComputeSrc   = HighLevelControl::ALUOpB; //LUI
+            end
+            7'b0010111: begin
+                Controller.ALUSrcB      = HighLevelControl::aluSrcB'('x);
+                Controller.ComputeSrc   = HighLevelControl::UpdatedPC; //AUIPC
+            end
             
-            default:    Controller.ComputeSrc    = HighLevelControl::computeSrc'('x); 
+            default:    begin
+                Controller.ALUSrcB      = HighLevelControl::aluSrcB'('x);
+                Controller.ComputeSrc   = HighLevelControl::computeSrc'('x); 
+            end
             
         endcase
     end

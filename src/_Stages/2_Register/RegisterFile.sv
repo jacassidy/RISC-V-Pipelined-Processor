@@ -19,7 +19,7 @@ module registerFile #(
 );
     localparam REGISTER_SELECTION_WIDTH = $clog2(REGISTER_COUNT);
 
-    logic [BIT_COUNT-1 : 0] register_values[REGISTER_COUNT]; //output values of registers held 
+    logic [BIT_COUNT-1 : 0] register_values[REGISTER_COUNT-1:0]; //output values of registers held 
 
     //Defining Registers 
 
