@@ -7,6 +7,8 @@ module vectorStorage #(
     parameter MEMORY_SIZE_WORDS,
     parameter ADRESS_SIZE
 ) (
+    input   logic                       clk,
+    input   logic                       reset,
     
     input   logic                       MemEn,
     input   logic                       WriteEnable,
@@ -22,17 +24,37 @@ module vectorStorage #(
 
     assign MemData = MemEn ? Memory[MemoryAdress>>2] : 'x;
 
-    always_latch begin
-        if (WriteEnable & MemEn) begin
-            for (int i = 0; i < (`WORD_SIZE/8); i++) begin
-                logic[`WORD_SIZE-1:0] LocalMemData;
-                LocalMemData = Memory[MemoryAdress>>2];
-                if (ByteEn[i]) begin
-                    LocalMemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
-                end
+    // genvar i;
+    // genvar k;
+
+    // generate
+
+    // endgenerate
+
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            for (int i = 0; i < MEMORY_SIZE_WORDS; i++) begin
+                Memory[i] <= 'x;
             end
-        end
+        end else if (WriteEnable && MemEn) begin
+            logic[`WORD_SIZE-1:0] LocalMemData;
+
+            LocalMemData = Memory[MemoryAdress>>2];
+
+            LocalMemData = InputData & {{(8){ByteEn[3]}}, {(8){ByteEn[2]}}, {(8){ByteEn[1]}}, {(8){ByteEn[0]}}};
+
+            // for (int i = 0; i < (`WORD_SIZE/8); i++) begin
+            //     if (ByteEn[i]) begin
+            //         //LocalMemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
+            //         LocalMemData = 0;
+            //     end
+            // end
+        
+            Memory[MemoryAdress>>2] = LocalMemData;
+        end 
     end
+
+
 
     initial begin
         if (MEMORY_FILE_PATH !== "") begin
@@ -42,3 +64,21 @@ module vectorStorage #(
     end
     
 endmodule
+
+/*
+always_latch begin
+        if (WriteEnable & MemEn) begin
+            for (int i = 0; i < (`WORD_SIZE/8); i++) begin
+                logic[`WORD_SIZE-1:0] LocalMemData;
+                
+                LocalMemData = Memory[MemoryAdress>>2];
+
+                if (ByteEn[i]) begin
+                    LocalMemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
+                end
+
+                Memory[MemoryAdress>>2] = LocalMemData;
+            end
+        end
+    end
+    */

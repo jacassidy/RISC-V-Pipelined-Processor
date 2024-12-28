@@ -46,7 +46,7 @@ module immediateExtender #(
             Imm4t0:     Imm = {{(BIT_COUNT-5) {1'bx     }}, shamt    }; //Shift immediate, only 5 bits needed
             SType:      Imm = {{(BIT_COUNT-12){Instr[31]}}, Immb11t5, Immb4t0 };
             UType:      Imm = {{(BIT_COUNT-32){Instr[31]}}, Immb31t12, 12'b0};
-            JType:      Imm = {{(BIT_COUNT-31){Instr[31]}}, Instr[31], Immb19t12, Instr[20], Immb10t1, 1'b0};
+            JType:      Imm = {{(BIT_COUNT-21){Instr[31]}}, Instr[31], Immb19t12, Instr[20], Immb10t1, 1'b0};
             BType:      Imm = {{(BIT_COUNT-13){Instr[31]}}, Instr[31], Instr[7], Immb10t5, Immb4t1, 1'b0};
 
             default: Imm = 'x;

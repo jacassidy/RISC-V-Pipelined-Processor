@@ -111,6 +111,7 @@ module controller #(
             7'b0100011: Controller = SType; 
             7'b0x10111: Controller = UType; 
             7'b110x111: Controller = JType;
+            7'b1100011: Controller = BType;
 
             default: begin
                 setControllerX(Controller);

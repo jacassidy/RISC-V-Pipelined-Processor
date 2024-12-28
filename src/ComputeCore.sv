@@ -146,10 +146,12 @@ module computeCore #(
 
     ////                        **** M STAGE ****                       ////
 
-    ////Memory Cache handled externally////
+    assign MemAdr = ComputeResult;
 
     //**** ONLY WORKS FOR 32 BIT MEMORY****//
-    assign MemWriteData = ALUOpB[31:0];
+    assign MemWriteData = Rs2[31:0];
+
+    ////Memory Cache handled externally////
 
     //Result Select Mux
 

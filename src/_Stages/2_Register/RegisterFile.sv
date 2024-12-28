@@ -23,10 +23,12 @@ module registerFile #(
 
     //Defining Registers 
 
+    assign register_values[0] = 0;
+
     genvar i;
 
     generate
-        for (i = 0; i < REGISTER_COUNT; i++) begin
+        for (i = 1; i < REGISTER_COUNT; i++) begin
             flopRE #(.WIDTH(BIT_COUNT)) flop(.clk, .reset, 
                 //logic'
                 .en(WriteEnable && rd1Adr == i[REGISTER_SELECTION_WIDTH-1 : 0]), 

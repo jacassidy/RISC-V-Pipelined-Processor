@@ -4,7 +4,7 @@
 module SingleCycleTestBench();
 
 	//singleCycleTestBenchModule #("../TestCode/test.hex", "../TestCode/expected_outputs.hex", 32) test1 ();
-	singleCycleTestBenchModule #("../TestCode/full_RV32I.hex", "../TestCode/expected_full_RV32I_outputs.hex", 32) test1 ();
+	singleCycleTestBenchModule #("../TestCode/RD1_Lockstep/full_RV32I.hex", "../TestCode/RD1_Lockstep/expected_full_RV32I_outputs.hex", 32) test1 ();
 
 endmodule
 
@@ -22,7 +22,7 @@ module singleCycleTestBenchModule #(parameter inputFileName, outputFileName, BIT
 	localparam outputVectorSize = (32);
 	
 	// instantiate device under test
-	noCacheCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName), .BIT_COUNT(BIT_COUNT)) dut (.clk, .reset);
+	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName), .BIT_COUNT(BIT_COUNT)) dut (.clk, .reset);
 	
 	//////////////////////////////////
 	////		Section to Change		////
