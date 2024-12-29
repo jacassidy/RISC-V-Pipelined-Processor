@@ -3,14 +3,13 @@
 //Rd1 lockstep testbench
 module SingleCycleTestBench();
 
-	singleCycleTestBenchModule #(.inputFileName("../TestCode/full_program.hex"), .output_value(32'h0f), .BIT_COUNT(32)) test1 ();
+	singleCycleTestBenchModule #(.inputFileName("../TestCode/full_program.hex"), .output_value(32'h0f)) test1 ();
 
 endmodule
 
 module singleCycleTestBenchModule #(
 	parameter inputFileName, 
-	parameter output_value, 
-	parameter BIT_COUNT = 32
+	parameter output_value
 ) (
 
 );
@@ -27,7 +26,7 @@ module singleCycleTestBenchModule #(
 	localparam outputVectorSize = (32);
 	
 	// instantiate device under test
-	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName), .BIT_COUNT(BIT_COUNT)) dut (.clk, .reset);
+	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName)) dut (.clk, .reset);
 	
 	//////////////////////////////////
 	////		Section to Change		////

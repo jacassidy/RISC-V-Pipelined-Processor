@@ -1,35 +1,27 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/20/2024
 
-`define WORD_SIZE 32
-
 module vectorStorage #(
     parameter MEMORY_FILE_PATH = "",
     parameter MEMORY_SIZE_WORDS,
-    parameter ADRESS_SIZE
+    parameter ADRESS_SIZE,
+    parameter BIT_COUNT
 ) (
     input   logic                       clk,
     input   logic                       reset,
     
     input   logic                       MemEn,
     input   logic                       WriteEnable,
-    input   logic[(`WORD_SIZE/8)-1:0]   ByteEn,
+    input   logic[(BIT_COUNT/8)-1:0]   ByteEn,
 
     input   logic[ADRESS_SIZE-1:0]      MemoryAdress,
-    input   logic[`WORD_SIZE-1:0]       InputData,
+    input   logic[BIT_COUNT-1:0]       InputData,
 
-    output  logic[`WORD_SIZE-1:0]       MemData
+    output  logic[BIT_COUNT-1:0]       MemData
 );
 
-    logic[`WORD_SIZE-1:0] Memory[MEMORY_SIZE_WORDS-1:0];
+    logic[BIT_COUNT-1:0] Memory[MEMORY_SIZE_WORDS-1:0];
 
     assign MemData = MemEn ? Memory[MemoryAdress>>2] : 'x;
-
-    // genvar i;
-    // genvar k;
-
-    // generate
-
-    // endgenerate
 
     always_ff @(posedge clk) begin
         if (reset) begin
@@ -37,23 +29,19 @@ module vectorStorage #(
                 Memory[i] <= 'x;
             end
         end else if (WriteEnable && MemEn) begin
-            logic[`WORD_SIZE-1:0] LocalMemData;
+            logic[BIT_COUNT-1:0] LocalMemData;
 
             LocalMemData = Memory[MemoryAdress>>2];
 
-            LocalMemData = InputData & {{(8){ByteEn[3]}}, {(8){ByteEn[2]}}, {(8){ByteEn[1]}}, {(8){ByteEn[0]}}};
-
-            // for (int i = 0; i < (`WORD_SIZE/8); i++) begin
-            //     if (ByteEn[i]) begin
-            //         //LocalMemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
-            //         LocalMemData = 0;
-            //     end
-            // end
+            for (int i = 0; i < (BIT_COUNT/8); i++) begin
+                if (ByteEn[i]) begin
+                    LocalMemData[((i+1)*8-1) -: 8] = InputData[((i+1)*8-1) -: 8];
+                end
+            end
         
-            Memory[MemoryAdress>>2] = LocalMemData;
+            Memory[MemoryAdress>>2] <= LocalMemData;
         end 
     end
-
 
 
     initial begin
@@ -64,21 +52,3 @@ module vectorStorage #(
     end
     
 endmodule
-
-/*
-always_latch begin
-        if (WriteEnable & MemEn) begin
-            for (int i = 0; i < (`WORD_SIZE/8); i++) begin
-                logic[`WORD_SIZE-1:0] LocalMemData;
-                
-                LocalMemData = Memory[MemoryAdress>>2];
-
-                if (ByteEn[i]) begin
-                    LocalMemData[(i+1)*8 -: 8] <= InputData[(i+1)*8 -: 8];
-                end
-
-                Memory[MemoryAdress>>2] = LocalMemData;
-            end
-        end
-    end
-    */

@@ -1,5 +1,7 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/20/2024
 
+`include "parameters.svh"
+
 package HighLevelControl;
 
     typedef enum logic[1:0] {
@@ -75,6 +77,11 @@ package HighLevelControl;
         WORD,
         BYTE_UNSIGNED,
         HALF_WORD_UNSIGNED,
+
+        `ifdef BIT_COUNT_64
+            WORD_UNSIGNED,
+        `endif
+
         NO_TRUNC
     } truncSrc;
 

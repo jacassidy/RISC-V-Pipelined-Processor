@@ -1,6 +1,13 @@
 .global _start
 
 _start:
+    li x1, 0xFEBBA999 #12
+    slli x1, x1, 16     #3
+    slli x1, x1, 16     #4
+    li x2, 0x98765432   #56
+    add x1, x1, x2      #7
+
+
     addi x1, x0, 0x10   #1
     li   x2, -1         #2
     nop                 #3

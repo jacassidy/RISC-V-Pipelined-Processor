@@ -1,6 +1,6 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/20/2024
 
-`define WORD_SIZE 32
+`include "parameters.svh"
 
 //               (1       +1      +1        +(`WORD_SIZE/8))
 //                {RegWrite, MemEn, MemWrite,      ByteEn}
@@ -43,7 +43,7 @@ function automatic void setControllerX(ref controlSignals ctrl);
 endfunction
 
 module controller #(
-    BIT_COUNT
+
 ) (
     input   logic[`WORD_SIZE-1:0]       Instr,
 
@@ -61,23 +61,24 @@ module controller #(
 
     output logic                        MemEn,
     output logic                        MemWrite,
-    output logic[(`WORD_SIZE/8)-1:0]    ByteEn,
+    output logic[(`BIT_COUNT/8)-1:0]    ByteEn,
 
     output HighLevelControl::resultSrc                    ResultSrc,
     output HighLevelControl::truncSrc                     TruncSrc
 );
+    logic funct7b5;
     logic[2:0] funct3;
-    logic[6:0] opcode, funct7;
+    logic[6:0] opcode;
 
     //Bus Assignments
     assign opcode = Instr[6:0];
     assign funct3 = Instr[14:12];
-    assign funct7 = Instr[31:25];
+    assign funct7b5 = Instr[30];
 
-    controlSignals Controller, RType, IType, ISType, LType, SType, UType, JType, BType;
+    controlSignals Controller, RType, IType, LType, SType, UType, JType, BType;
 
     //Transition to enum to simplify
-    assign {RegWrite, MemEn, MemWrite, ByteEn} = Controller.signals;
+    assign {RegWrite, MemEn, MemWrite, ByteEn[3:0]} = Controller.signals;
 
     assign PCSrc            = Controller.PCSrc;
     assign ConditionalPCSrc = Controller.ConditionalPCSrc;
@@ -93,9 +94,8 @@ module controller #(
     assign TruncSrc         = Controller.TruncSrc;
 
     //R-Type Controller
-    rTypeController     RTypeController (.funct7,   .funct3,            .Controller(RType)  );
-    iTypeController     ITypeController (.funct3,                       .Controller(IType)  );
-    isTypeController    ISTypeController(.funct7,   .funct3,            .Controller(ISType) );
+    rTypeController     RTypeController (.funct7b5, .funct3,            .Controller(RType)  );
+    iTypeController     ITypeController (.funct7b5, .funct3,            .Controller(IType)  );
     lTypeController     LTypeController (.funct3,                       .Controller(LType)  );
     sTypeController     STypeController (.funct3,                       .Controller(SType)  );
     uTypeController     UTypeController (.opcode,                       .Controller(UType)  );
@@ -106,7 +106,6 @@ module controller #(
         casex(opcode)
             7'b0110011: Controller = RType;
             7'b0010011: Controller = IType;
-            7'b0010011: Controller = ISType;
             7'b0000011: Controller = LType; 
             7'b0100011: Controller = SType; 
             7'b0x10111: Controller = UType; 
@@ -125,7 +124,7 @@ endmodule
 
 //Operation between Rs1 Rs2 and put in Rd1
 module rTypeController(
-    input logic[6:0] funct7,
+    input logic      funct7b5,
     input logic[2:0] funct3,
 
     output controlSignals Controller
@@ -147,17 +146,17 @@ module rTypeController(
     assign Controller.TruncSrc          = HighLevelControl::NO_TRUNC;
     
     always_comb begin
-        casex({funct7, funct3})
-            10'b0000000_000: Controller.ALUOp = HighLevelControl::ADD;
-            10'b0100000_000: Controller.ALUOp = HighLevelControl::SUB;
-            10'b0000000_110: Controller.ALUOp = HighLevelControl::OR;
-            10'b0000000_111: Controller.ALUOp = HighLevelControl::AND;
-            10'b0000000_100: Controller.ALUOp = HighLevelControl::XOR;
-            10'b0000000_001: Controller.ALUOp = HighLevelControl::SLL;
-            10'b0000000_010: Controller.ALUOp = HighLevelControl::SLT;
-            10'b0000000_011: Controller.ALUOp = HighLevelControl::SLTU;
-            10'b0000000_101: Controller.ALUOp = HighLevelControl::SRL;
-            10'b0100000_101: Controller.ALUOp = HighLevelControl::SRA;
+        casex({funct7b5, funct3})
+            4'b0_000: Controller.ALUOp = HighLevelControl::ADD;
+            4'b1_000: Controller.ALUOp = HighLevelControl::SUB;
+            4'b0_110: Controller.ALUOp = HighLevelControl::OR;
+            4'b0_111: Controller.ALUOp = HighLevelControl::AND;
+            4'b0_100: Controller.ALUOp = HighLevelControl::XOR;
+            4'b0_001: Controller.ALUOp = HighLevelControl::SLL;
+            4'b0_010: Controller.ALUOp = HighLevelControl::SLT;
+            4'b0_011: Controller.ALUOp = HighLevelControl::SLTU;
+            4'b0_101: Controller.ALUOp = HighLevelControl::SRL;
+            4'b1_101: Controller.ALUOp = HighLevelControl::SRA;
             
             default: Controller.ALUOp = HighLevelControl::aluOperation'('x);
             
@@ -168,6 +167,7 @@ endmodule
 
 //Operation between Rs1 and Imm put in Rd1
 module iTypeController(
+    input logic      funct7b5,
     input logic[2:0] funct3,
 
     output controlSignals Controller
@@ -179,7 +179,6 @@ module iTypeController(
     assign Controller.PCSrc             = HighLevelControl::PCp4_I;
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
-    assign Controller.ImmSrc            = HighLevelControl::Imm11t0;
     assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
 
     assign Controller.ALUSrcB           = HighLevelControl::Imm;
@@ -190,52 +189,49 @@ module iTypeController(
     
     always_comb begin
         casex(funct3)
-            3'b000: Controller.ALUOp = HighLevelControl::ADD;
-
-            3'b110: Controller.ALUOp = HighLevelControl::OR;
-            3'b111: Controller.ALUOp = HighLevelControl::AND; 
-            3'b100: Controller.ALUOp = HighLevelControl::XOR;
-
-            3'b010: Controller.ALUOp = HighLevelControl::SLT;
-            3'b011: Controller.ALUOp = HighLevelControl::SLTU;
+            //normal immediate operations
+            3'b000: begin
+                Controller.ImmSrc       = HighLevelControl::Imm11t0;
+                Controller.ALUOp        = HighLevelControl::ADD;
+            end
+            3'b110: begin
+                Controller.ImmSrc       = HighLevelControl::Imm11t0;
+                Controller.ALUOp        = HighLevelControl::OR;
+            end
+            3'b111: begin
+                Controller.ImmSrc       = HighLevelControl::Imm11t0;
+                Controller.ALUOp        = HighLevelControl::AND; 
+            end
+            3'b100: begin
+                Controller.ImmSrc       = HighLevelControl::Imm11t0;
+                Controller.ALUOp        = HighLevelControl::XOR;
+            end
+            3'b010: begin
+                Controller.ImmSrc       = HighLevelControl::Imm11t0;
+                Controller.ALUOp        = HighLevelControl::SLT;
+            end
+            3'b011: begin
+                Controller.ImmSrc       = HighLevelControl::Imm11t0;
+                Controller.ALUOp        = HighLevelControl::SLTU;
+            end
+            //Shift immediate operations
+            3'b001: begin
+                Controller.ImmSrc       = HighLevelControl::Imm4t0;
+                Controller.ALUOp        = HighLevelControl::SLL;
+            end
+            3'b101: begin
+                Controller.ImmSrc       = HighLevelControl::Imm4t0;
+                if(funct7b5) begin
+                    Controller.ALUOp    = HighLevelControl::SRA;
+                end else begin
+                    Controller.ALUOp = HighLevelControl::SRL;
+                end
+            end
             
-            default: Controller.ALUOp = HighLevelControl::aluOperation'('x);
-            
-        endcase
-    end
-
-endmodule
-
-//Shift operation between Rs1 and Imm put in Rd1
-module isTypeController(
-    input logic[6:0] funct7,
-    input logic[2:0] funct3,
-
-    output controlSignals Controller
-);
-
-    //{RegWrite, MemEn, MemWrite, ByteEn}
-    assign Controller.signals           = `SIGNAL_SIZE'b1_0_0_0000;
-
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.ImmSrc            = HighLevelControl::Imm4t0;
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
-
-    assign Controller.ALUSrcB           = HighLevelControl::Imm;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncSrc          = HighLevelControl::NO_TRUNC;
-    
-    always_comb begin
-        casex({funct7, funct3})
-            10'b0000000_001: Controller.ALUOp = HighLevelControl::SLL;
-            10'b0000000_101: Controller.ALUOp = HighLevelControl::SRL;
-            10'b0100000_101: Controller.ALUOp = HighLevelControl::SRA;
-            
-            default:         Controller.ALUOp = HighLevelControl::aluOperation'('x);
+            default: begin
+                Controller.ImmSrc       = HighLevelControl::immSrc'('x);
+                Controller.ALUOp        = HighLevelControl::aluOperation'('x);
+            end
             
         endcase
     end
