@@ -22,8 +22,8 @@ package HighLevelControl;
     } conditionalPCSrc;
 
     typedef enum logic[2:0] {
-        Imm11t0,
-        Imm4t0,
+        IType,
+        Shamt,
         SType,
         UType,
         JType,
@@ -51,12 +51,20 @@ package HighLevelControl;
         OR,
         AND,
         XOR,
-
-        SLL,
         SLT,
         SLTU,
+
+        `ifdef BIT_COUNT_64
+            SLLW,
+            SRLW,
+            SRAW,
+        `endif
+
+        SLL,
         SRL,
         SRA
+
+
     } aluOperation;
 
     //Could feed all data out of ALU and combine with this mux

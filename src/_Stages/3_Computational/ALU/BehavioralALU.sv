@@ -20,7 +20,7 @@ module behavioralAlu #(
     output logic[`BIT_COUNT - 1 : 0]         ALUResult
 );
 
-    assign Negative            = ALUResult[31];
+    assign Negative            = ALUResult[`BIT_COUNT-1];
     assign Zero                = ~(|ALUResult);
 
     always_comb begin
@@ -53,17 +53,17 @@ module behavioralAlu #(
             end
             SLL: begin //SLL
                 Carry       = 0;
-                ALUResult   = ALUOpA << ALUOpB[4:0];
+                ALUResult   = ALUOpA << ALUOpB[($clog2(`BIT_COUNT)-1):0];
                 oVerflow    = 0;
             end
             SRL: begin //SRL
                 Carry       = 0;
-                ALUResult   = ALUOpA >> ALUOpB[4:0];
+                ALUResult   = ALUOpA >> ALUOpB[($clog2(`BIT_COUNT)-1):0];
                 oVerflow    = 0;
             end
             SRA: begin //SRA
                 Carry       = 0;
-                ALUResult   = $signed(ALUOpA) >>> ALUOpB[4:0];
+                ALUResult   = $signed(ALUOpA) >>> ALUOpB[($clog2(`BIT_COUNT)-1):0];
                 oVerflow    = 0;
             end
             SLTU: begin //SLTU
@@ -87,6 +87,24 @@ module behavioralAlu #(
                                     & (ALUOpA[`BIT_COUNT-1] ^ ALUResult[`BIT_COUNT-1]);
                 
             end
+
+            `ifdef BIT_COUNT_64
+                SLLW: begin //SLL
+                    Carry       = 0;
+                    ALUResult   = ALUOpA << ALUOpB[($clog2(`WORD_SIZE)-1):0];
+                    oVerflow    = 0;
+                end
+                SRLW: begin //SRL
+                    Carry       = 0;
+                    ALUResult   = ALUOpA >> ALUOpB[($clog2(`WORD_SIZE)-1):0];
+                    oVerflow    = 0;
+                end
+                SRAW: begin //SRA
+                    Carry       = 0;
+                    ALUResult   = $signed(ALUOpA) >>> ALUOpB[($clog2(`WORD_SIZE)-1):0];
+                    oVerflow    = 0;
+                end
+            `endif 
 
             default: begin
                 ALUResult   = 'x;
