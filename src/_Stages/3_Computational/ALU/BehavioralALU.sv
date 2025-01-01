@@ -71,7 +71,7 @@ module behavioralAlu #(
                 Sub         = ALUOpA - ALUOpB;
 
                 Carry       = Sub[`BIT_COUNT];
-                ALUResult   = {(`BIT_COUNT-1) * 1'b0 , Carry};
+                ALUResult   = {{(`BIT_COUNT-1) {1'b0}} , Carry};
                 oVerflow    = ~(ALUOpA[`BIT_COUNT-1] ^ ALUOpB[`BIT_COUNT-1] ^ 1'b1) 
                                     & (ALUOpA[`BIT_COUNT-1] ^ ALUResult[`BIT_COUNT-1]);
                 
@@ -82,26 +82,28 @@ module behavioralAlu #(
 
                 Carry       = Sub[`BIT_COUNT];
                 //If result is negative (sign inverted by overflow)
-                ALUResult   = {(`BIT_COUNT-1) * 1'b0 , Sub[`BIT_COUNT-1] ^ oVerflow};
+                ALUResult   = {{(`BIT_COUNT-1) {1'b0}} , Sub[`BIT_COUNT-1] ^ oVerflow};
                 oVerflow    = ~(ALUOpA[`BIT_COUNT-1] ^ ALUOpB[`BIT_COUNT-1] ^ 1'b1) 
                                     & (ALUOpA[`BIT_COUNT-1] ^ ALUResult[`BIT_COUNT-1]);
                 
             end
 
             `ifdef BIT_COUNT_64
+
+                //32 bit opperations in RV64I
                 SLLW: begin //SLL
                     Carry       = 0;
-                    ALUResult   = ALUOpA << ALUOpB[($clog2(`WORD_SIZE)-1):0];
+                    ALUResult   = {(`WORD_SIZE'bx), ALUOpA[`WORD_SIZE-1:0] << ALUOpB[($clog2(`WORD_SIZE)-1):0]};
                     oVerflow    = 0;
                 end
                 SRLW: begin //SRL
                     Carry       = 0;
-                    ALUResult   = ALUOpA >> ALUOpB[($clog2(`WORD_SIZE)-1):0];
+                    ALUResult   = {`WORD_SIZE'bx, ALUOpA[`WORD_SIZE-1:0] >> ALUOpB[($clog2(`WORD_SIZE)-1):0]};
                     oVerflow    = 0;
                 end
                 SRAW: begin //SRA
                     Carry       = 0;
-                    ALUResult   = $signed(ALUOpA) >>> ALUOpB[($clog2(`WORD_SIZE)-1):0];
+                    ALUResult   = {`WORD_SIZE'bx, $signed(ALUOpA[`WORD_SIZE-1:0]) >>> ALUOpB[($clog2(`WORD_SIZE)-1):0]};
                     oVerflow    = 0;
                 end
             `endif 

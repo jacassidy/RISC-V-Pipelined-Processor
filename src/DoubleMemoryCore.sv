@@ -18,7 +18,7 @@ module doubleMemoryCore #(
     logic[(`BIT_COUNT/8)-1:0] ByteEn;
 
     //Instruction Memory
-    vectorStorage #(.MEMORY_FILE_PATH(INSTRUCTION_MEMORY_FILE_NAME), .MEMORY_SIZE_WORDS(64), .ADRESS_SIZE(`BIT_COUNT), .BIT_COUNT(32)) 
+    vectorStorage #(.MEMORY_FILE_PATH(INSTRUCTION_MEMORY_FILE_NAME), .MEMORY_SIZE_WORDS(84), .ADRESS_SIZE(`BIT_COUNT), .BIT_COUNT(32)) 
         InstructionMemory(.clk, .reset(1'b0), .MemEn(1'b1), .WriteEnable(1'b0), 
         .ByteEn(4'b0), .MemoryAdress(InstrAdr), .InputData(`WORD_SIZE'b0), .MemData(Instr));
 

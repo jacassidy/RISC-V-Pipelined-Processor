@@ -1,9 +1,11 @@
 //Kaden Cassidy jkc.cassidy@gmail.com 12/26/2024
 
-//Rd1 lockstep testbench
-module SingleCycleTestBench();
+`include "parameters.svh"
 
-	singleCycleTestBenchModule #(.inputFileName("../TestCode/full_program.hex"), .output_value(32'h0f)) test1 ();
+//Rd1 lockstep testbench
+module Full_Program_TestBench();
+
+	singleCycleTestBenchModule #(.inputFileName("../TestCode/Full_Programs/full_program.hex"), .output_value(32'h0f)) test1 (); //requires 64 word memory each
 
 endmodule
 
@@ -23,7 +25,7 @@ module singleCycleTestBenchModule #(
 
 	//localvariables
 	// localparam inputVectorSize = (3 + bitCount * 2);
-	localparam outputVectorSize = (32);
+	localparam outputVectorSize = (`BIT_COUNT);
 	
 	// instantiate device under test
 	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName)) dut (.clk, .reset);

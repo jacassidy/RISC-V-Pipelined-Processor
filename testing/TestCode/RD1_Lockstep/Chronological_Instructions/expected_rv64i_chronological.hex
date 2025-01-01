@@ -1,0 +1,43 @@
+FFFFFFFFFFFFF000    //lui
+FFFFFFFFFFFFEDEF    //addi
+xxxxxxxxxxxxxxxx    //sw
+xxxxxxxxxxxxxxxx    //sh
+xxxxxxxxxxxxxxxx    //sb
+FFFFFFFFFFFFEDEF    //lw
+000000000000EDEF    //lhu
+00000000000000EF    //lbu
+FFFFFFFFFFFFEDEF    //lh
+FFFFFFFFFFFFFFEF    //lb
+FFFFFFFFFEEDF028    //auipc
+0000000000000000    //sltiu
+0000000000000001    //slti
+0000000000000054    //xori
+00000000000000FE    //ori
+00000000000000FE    //andi
+00000000000001FC    //add
+0000000000000000    //sub
+FFFFFFFFFFFFDBDE    //sll   
+7FFFFFFFFFFFF6F7    //srl
+FFFFFFFFFFFFF6F7    //sra
+0000000000000001    //slt
+0000000000000000    //sltu
+0000000000002d29    //xor
+FFFFFFFFFFFFFFFF    //or
+FFFFFFFFFFFFD2D6    //and
+xxxxxxxxxxxxxxxx    //fence
+FFFFF6F780000000    //slli
+00000001FFFFFFFF    //srli
+FFFFFFFFFFFFFFFF    //srai
+xxxxxxxxxxxxxxxx    //nop
+0000000000000000    //slli long
+000000000FFFFF6F    //srli long
+FFFFFFFFFFFFFF6F    //srai long
+FFFFF6F000000000    //sll
+FFFFF6F00FFFFF6F    //or
+FFFFFFFFFF6F0000    //slliw
+0000000000000FFF    //srliw
+0000000000000FFF    //sraiw
+FFFFFFFFFFFFFFFF    //sraiw
+xxxxxxxxxxxxxxxx    //sd
+FFFFF6F00FFFFF6F    //ld
+00000000FFFFEDEF    //lwu

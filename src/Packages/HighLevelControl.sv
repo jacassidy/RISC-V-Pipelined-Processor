@@ -30,10 +30,12 @@ package HighLevelControl;
         BType
     } immSrc;
 
-    typedef enum logic {
+    typedef enum logic[1:0] {
         PCpImm,
-        PCp4
-    } updatedPCSrc;
+        PCp4,
+        WriteData
+
+    } miscSrc;
 
     // typedef enum logic {
     //     Rs1     = 1'b0, 

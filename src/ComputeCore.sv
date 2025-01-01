@@ -24,7 +24,7 @@ module computeCore #(
     logic[$clog2(`WORD_SIZE)-1:0] rs1Adr, rs2Adr, rd1Adr;
 
     logic[`BIT_COUNT-1:0] PCNext, PCp4, OldPC, Rd1, Rs1, Rs2, 
-            Imm, PCpImm, UpdatedPC, ALUOpA, ALUOpB, ALUResult, ComputeResult, Result;
+            Imm, PCpImm, UpdatedPC, Misc, ALUOpA, ALUOpB, ALUResult, ComputeResult, Result;
 
     //Controller Signals
     logic RegWrite, Zero, oVerflow, Carry, Negative;
@@ -35,7 +35,7 @@ module computeCore #(
     HighLevelControl::conditionalPCSrc  ConditionalPCSrc;
 
     HighLevelControl::immSrc            ImmSrc;
-    HighLevelControl::updatedPCSrc      UpdatedPCSrc;
+    HighLevelControl::miscSrc           MiscSrc;
 
     // HighLevelControl::aluSrcA           AluSrcA;
     HighLevelControl::aluSrcB           ALUSrcB;
@@ -84,7 +84,7 @@ module computeCore #(
     ////                        **** R STAGE ****                       ////
     //Controller
     controller Controller(.Instr,
-        .PCSrc, .ConditionalPCSrc, .RegWrite, .ImmSrc, .UpdatedPCSrc, .ALUSrcB, 
+        .PCSrc, .ConditionalPCSrc, .RegWrite, .ImmSrc, .MiscSrc, .ALUSrcB, 
         .ALUOp, .ComputeSrc, .MemEn, .MemWrite, .ByteEn, .ResultSrc, .TruncSrc);
 
     //Register File
@@ -100,11 +100,12 @@ module computeCore #(
 
     //Updated PC Mux
     always_comb begin
-        casex(UpdatedPCSrc)
-            HighLevelControl::PCpImm:   UpdatedPC = PCpImm;
-            HighLevelControl::PCp4:     UpdatedPC = PCp4;
+        casex(MiscSrc)
+            HighLevelControl::PCpImm:       Misc = PCpImm;
+            HighLevelControl::PCp4:         Misc = PCp4;
+            HighLevelControl::WriteData:    Misc = Rs2;
 
-            default:  UpdatedPC = 'x;
+            default:  Misc = 'x;
         endcase
     end
 
@@ -123,6 +124,8 @@ module computeCore #(
     end
 
     ////                        **** C STAGE ****                       ////
+
+    assign UpdatedPC = Misc;
 
     //ALU
     behavioralAlu ALU(.ALUOp, .ALUOpA, .ALUOpB, .Zero,
@@ -148,7 +151,7 @@ module computeCore #(
 
     assign MemAdr = ComputeResult;
 
-    assign MemWriteData = Rs2;
+    assign MemWriteData = Misc;
 
     ////Memory Cache handled externally////
 

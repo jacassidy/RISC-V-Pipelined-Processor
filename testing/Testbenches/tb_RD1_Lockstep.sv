@@ -1,10 +1,19 @@
 //Kaden Cassidy jkc.cassidy@gmail.com 12/26/2024
 
-//Rd1 lockstep testbench
-module SingleCycleTestBench();
+`include "parameters.svh"
 
-	//singleCycleTestBenchModule #("../TestCode/test.hex", "../TestCode/expected_outputs.hex", 32) test1 ();
-	singleCycleTestBenchModule #("../TestCode/RD1_Lockstep/full_RV32I.hex", "../TestCode/RD1_Lockstep/expected_full_RV32I_outputs.hex", 32) test1 ();
+//Rd1 lockstep testbench
+module RD1_Lockstep_TestBench();
+
+	//singleCycleTestBenchModule #("../TestCode/RD1_Lockstep/full_RV32I.hex", "../TestCode/RD1_Lockstep/expected_full_RV32I_outputs.hex", 32) test1 ();
+	
+	//Full RV32I chronological test
+	singleCycleTestBenchModule #("../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex", 
+								"../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv32i_chronological.hex", 32) rv32i_chronological ();
+
+	//Full RV64I chronological test
+	// singleCycleTestBenchModule #("../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex", 
+	// 							"../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv64i_chronological.hex", 64) rv64i_chronological ();
 
 endmodule
 
@@ -19,10 +28,10 @@ module singleCycleTestBenchModule #(parameter inputFileName, outputFileName, BIT
 
 	//localvariables
 	// localparam inputVectorSize = (3 + bitCount * 2);
-	localparam outputVectorSize = (32);
+	localparam outputVectorSize = (`BIT_COUNT);
 	
 	// instantiate device under test
-	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName), .BIT_COUNT(BIT_COUNT)) dut (.clk, .reset);
+	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName)) dut (.clk, .reset);
 	
 	//////////////////////////////////
 	////		Section to Change		////
@@ -44,9 +53,9 @@ module singleCycleTestBenchModule #(parameter inputFileName, outputFileName, BIT
 		$readmemh(outputFileName, outputTestvectors);
 		
 		//Reset Values
-		vector_num = 1; errors = 0; reset = 1; 
+		vector_num = 0; errors = 0; reset = 1; 
 		
-		#17; //Wait to reset
+		#12; //Wait to reset
 		
 		reset = 0; //Begin
 	end

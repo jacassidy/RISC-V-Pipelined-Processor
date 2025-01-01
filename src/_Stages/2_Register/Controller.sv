@@ -14,7 +14,7 @@ typedef struct packed {
     HighLevelControl::conditionalPCSrc        ConditionalPCSrc;
 
     HighLevelControl::immSrc                  ImmSrc;
-    HighLevelControl::updatedPCSrc            UpdatedPCSrc;
+    HighLevelControl::miscSrc                 MiscSrc;
 
     HighLevelControl::aluSrcB                 ALUSrcB;
     HighLevelControl::aluOperation            ALUOp;
@@ -32,7 +32,7 @@ function automatic void setControllerX(ref controlSignals ctrl);
     ctrl.ConditionalPCSrc = HighLevelControl::conditionalPCSrc'('x);
 
     ctrl.ImmSrc           = HighLevelControl::immSrc'('x);
-    ctrl.UpdatedPCSrc     = HighLevelControl::updatedPCSrc'('x);
+    ctrl.MiscSrc     = HighLevelControl::miscSrc'('x);
 
     ctrl.ALUSrcB          = HighLevelControl::aluSrcB'('x);
     ctrl.ALUOp            = HighLevelControl::aluOperation'('x);
@@ -52,7 +52,7 @@ module controller #(
     output logic                        RegWrite,
 
     output HighLevelControl::immSrc                       ImmSrc,
-    output HighLevelControl::updatedPCSrc                 UpdatedPCSrc,
+    output HighLevelControl::miscSrc                 MiscSrc,
 
     output HighLevelControl::aluSrcB                      ALUSrcB,
     output HighLevelControl::aluOperation                 ALUOp,
@@ -87,7 +87,7 @@ module controller #(
     assign ConditionalPCSrc = Controller.ConditionalPCSrc;
 
     assign ImmSrc           = Controller.ImmSrc;
-    assign UpdatedPCSrc     = Controller.UpdatedPCSrc;
+    assign MiscSrc     = Controller.MiscSrc;
 
     assign ALUSrcB          = Controller.ALUSrcB;
     assign ALUOp            = Controller.ALUOp;
@@ -147,7 +147,7 @@ module rTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::immSrc'('x);
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
+    assign Controller.MiscSrc      = HighLevelControl::miscSrc'('x);
 
     assign Controller.ALUSrcB           = HighLevelControl::Rs2;
 
@@ -191,7 +191,7 @@ module iTypeController(
     assign Controller.PCSrc             = HighLevelControl::PCp4_I;
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
+    assign Controller.MiscSrc      = HighLevelControl::miscSrc'('x);
 
     assign Controller.ALUSrcB           = HighLevelControl::Imm;
 
@@ -231,15 +231,20 @@ module iTypeController(
             //Shift immediate operations
             3'b001: begin
                 Controller.ImmSrc       = HighLevelControl::Shamt;
-                Controller.ALUOp        = HighLevelControl::SLL;
+                if((funct7 == 7'b0000000 && `BIT_COUNT == 32) || (funct7[6:1] == 6'b000000 && `BIT_COUNT == 64)) begin
+                    Controller.ALUOp    = HighLevelControl::SLL;
+                end else begin
+                    Controller.ALUOp    = HighLevelControl::aluOperation'('x);
+                    Controller.signals  = `SIGNAL_SIZE'b0;
+                end
             end
             3'b101: begin
                 Controller.ImmSrc       = HighLevelControl::Shamt;
                 
                 //32 bit shamt is outside of func7, in rv64i immb5 extends into funct7
-                if((funct7 == 7'b0100000 && `BIT_COUNT == 32) || (funct7 == 7'b010000x && `BIT_COUNT == 64)) begin
+                if((funct7 == 7'b0100000 && `BIT_COUNT == 32) || (funct7[6:1] == 6'b010000 && `BIT_COUNT == 64)) begin
                     Controller.ALUOp    = HighLevelControl::SRA;
-                end else if((funct7 == 7'b0000000 && `BIT_COUNT == 32) || (funct7 == 7'b000000x && `BIT_COUNT == 64)) begin
+                end else if((funct7 == 7'b0000000 && `BIT_COUNT == 32) || (funct7[6:1] == 6'b000000 && `BIT_COUNT == 64)) begin
                     Controller.ALUOp    = HighLevelControl::SRL;
                 end else begin
                     Controller.ALUOp    = HighLevelControl::aluOperation'('x);
@@ -269,7 +274,7 @@ module lTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::IType;
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
+    assign Controller.MiscSrc      = HighLevelControl::miscSrc'('x);
 
     assign Controller.ALUSrcB           = HighLevelControl::Imm;
     assign Controller.ALUOp             = HighLevelControl::ADD;
@@ -303,7 +308,6 @@ module lTypeController(
 
 endmodule
 
-//**** ONLY WORKS FOR 32 BIT MEMORY****// (ByteEn is 4 bits)
 //Operation between Rs1 and Imm to save Rs2 to memory
 module sTypeController(
     input logic[2:0]        funct3,
@@ -319,7 +323,7 @@ module sTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::SType;
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
+    assign Controller.MiscSrc           = HighLevelControl::WriteData;
 
     assign Controller.ALUSrcB           = HighLevelControl::Imm;
     assign Controller.ALUOp             = HighLevelControl::ADD;
@@ -364,7 +368,7 @@ module uTypeController(
     assign Controller.ALUOp             = HighLevelControl::aluOperation'('x);
 
     assign Controller.ImmSrc            = HighLevelControl::UType;
-    assign Controller.UpdatedPCSrc      = HighLevelControl::PCpImm;
+    assign Controller.MiscSrc      = HighLevelControl::PCpImm;
 
     assign Controller.ResultSrc         = HighLevelControl::Compute;
     assign Controller.TruncSrc          = HighLevelControl::NO_TRUNC;
@@ -402,7 +406,7 @@ module jTypeController(
 
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
     
-    assign Controller.UpdatedPCSrc      = HighLevelControl::PCp4;
+    assign Controller.MiscSrc      = HighLevelControl::PCp4;
 
     assign Controller.ALUOp             = HighLevelControl::aluOperation'('x);
 
@@ -455,7 +459,7 @@ module bTypeController(
     assign Controller.PCSrc             = HighLevelControl::Branch_C;
 
     assign Controller.ImmSrc            = HighLevelControl::BType;
-    assign Controller.UpdatedPCSrc      = HighLevelControl::PCpImm;
+    assign Controller.MiscSrc      = HighLevelControl::PCpImm;
 
     assign Controller.ALUSrcB           = HighLevelControl::Rs2;
     assign Controller.ALUOp             = HighLevelControl::SUB;
@@ -487,7 +491,7 @@ module bTypeController(
 endmodule
 
 //////////****************RV64I*******************//////////
-
+`ifdef BIT_COUNT_64
 //32-Bit operation between Rs1 Rs2 and put in Rd1
 module rwTypeController(
     input logic[6:0] funct7,
@@ -499,7 +503,7 @@ module rwTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::immSrc'('x);
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
+    assign Controller.MiscSrc      = HighLevelControl::miscSrc'('x);
 
     assign Controller.ALUSrcB           = HighLevelControl::Rs2;
 
@@ -539,7 +543,7 @@ module iwTypeController(
     assign Controller.PCSrc             = HighLevelControl::PCp4_I;
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
-    assign Controller.UpdatedPCSrc      = HighLevelControl::updatedPCSrc'('x);
+    assign Controller.MiscSrc      = HighLevelControl::miscSrc'('x);
 
     assign Controller.ALUSrcB           = HighLevelControl::Imm;
 
@@ -585,3 +589,5 @@ module iwTypeController(
     end
 
 endmodule
+
+`endif
