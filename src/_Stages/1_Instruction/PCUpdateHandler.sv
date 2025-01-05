@@ -12,33 +12,68 @@ module pcUpdateHandler #(
     
     //****NEEDS HAZZARD TO ASSESS PREDICTION***//
     input   logic                   Predict,
-    input   logic[`BIT_COUNT-1:0]    Prediction,
+    input   logic[`BIT_COUNT-1:0]   Prediction,
+    input   logic                   PredictionCorrect_R,
     input   logic                   PredictionCorrect_C, //Current branch/Jump in C stage was predicted correctly, thus Jump in R should be considered
 
-    input   logic[`BIT_COUNT-1:0]    PCp4,
-    input   logic[`BIT_COUNT-1:0]    AluAdd_C,
-    input   logic[`BIT_COUNT-1:0]    PCpImm_R,
-    input   logic[`BIT_COUNT-1:0]    UpdatedPC_C,
+    input   logic[`BIT_COUNT-1:0]   PCp4_I,
+    input   logic[`BIT_COUNT-1:0]   AluAdd_C,
+    input   logic[`BIT_COUNT-1:0]   PCpImm_R,
+    input   logic[`BIT_COUNT-1:0]   UpdatedPC_C,
 
-    output logic[`BIT_COUNT-1:0] PCNext
+    output logic[`BIT_COUNT-1:0]    PCNext_I
+
+    `ifdef PIPELINED
+        , 
+        output  logic               FlushIR,
+        output  logic               FlushRC
+    `endif 
 );
 
     always_comb begin
+        `ifdef PIPELINED
+            FlushIR = 1'b0;
+            FlushRC = 1'b0;
+        `endif
+
         //C stage first Prio
         if(PCSrcPostConditional_C == Branch_C || PCSrcPostConditional_C == Jump_C) begin
-            if(PredictionCorrect_C && PCSrc_R == Jump_R) begin
-                //If branch/jump predicted correctly and Jump_R in R stage, take the jump instead
-                                                        PCNext = {PCpImm_R[`BIT_COUNT-1:1], 1'b0};
+
+            if(PredictionCorrect_C && PCSrc_R == Jump_R && ~PredictionCorrect_R) begin
+                //If branch/jump predicted correctly and Jump_R in R stage and R stage jump incorrectly predicted, take the R stage jump
+                    PCNext_I = {PCpImm_R[`BIT_COUNT-1:1], 1'b0};
+
+                    `ifdef PIPELINED
+                        FlushIR = 1'b1;
+                    `endif
+                    
             end else begin
                 //If branch/jump was wrong then itll be flushed, take current
-                if(PCSrcPostConditional_C == Branch_C)  PCNext = {UpdatedPC_C[`BIT_COUNT-1:1], 1'b0};
+
+                `ifdef PIPELINED
+                    FlushIR = 1'b1;
+                    FlushRC = 1'b1;
+                `endif
+
+                if(PCSrcPostConditional_C == Branch_C)  
+                    PCNext_I = {UpdatedPC_C[`BIT_COUNT-1:1], 1'b0};
     
-                if(PCSrcPostConditional_C == Jump_C)    PCNext = {AluAdd_C[`BIT_COUNT-1:1], 1'b0};
+                if(PCSrcPostConditional_C == Jump_C)    
+                    PCNext_I = {AluAdd_C[`BIT_COUNT-1:1], 1'b0};
             end
+
         end
         //R stage second Prio
-        else if(PCSrc_R == Jump_R)                      PCNext = {PCpImm_R[`BIT_COUNT-1:1], 1'b0};
-        else                                            PCNext = {PCp4[`BIT_COUNT-1:1], 1'b0};
+        else if(PCSrc_R == Jump_R && ~PredictionCorrect_R) begin
+            //if source is Jump_R but we didnt already correctly predict the jump then jump
+                    PCNext_I = {PCpImm_R[`BIT_COUNT-1:1], 1'b0};
+
+                    `ifdef PIPELINED
+                        FlushIR = 1'b1;
+                    `endif
+        end else        
+            //PC + 4 is default
+                    PCNext_I = {PCp4_I[`BIT_COUNT-1:1], 1'b0};
     end
 
 endmodule

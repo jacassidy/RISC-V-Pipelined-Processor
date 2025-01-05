@@ -10,7 +10,7 @@ module immediateExtender #(
     input   immSrc                  ImmSrc,
     input   logic[`WORD_SIZE-1:0]   Instr,
     
-    output  logic[`BIT_COUNT-1:0]    Imm
+    output  logic[`BIT_COUNT-1:0]   Imm
 );
 
     logic[4:0]                      Immb4t0;
@@ -50,7 +50,7 @@ module immediateExtender #(
             JType:      Imm = {{(`BIT_COUNT-21)                 {Instr[31]}},   Instr[31],  Immb19t12,  Instr[20],  Immb10t1,   1'b0    };
             BType:      Imm = {{(`BIT_COUNT-13)                 {Instr[31]}},   Instr[31],  Instr[7],   Immb10t5,   Immb4t1,    1'b0    };
 
-            default: Imm = 'x;
+            default:    Imm = 'x;
         endcase
     end
     

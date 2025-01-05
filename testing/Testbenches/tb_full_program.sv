@@ -5,16 +5,9 @@
 //Rd1 lockstep testbench
 module Full_Program_TestBench();
 
-	singleCycleTestBenchModule #(.inputFileName("../TestCode/Full_Programs/full_program.hex"), .output_value(32'h0f)) test1 (); //requires 64 word memory each
+	localparam inputFileName = "../TestCode/Full_Programs/full_program.hex"; //requires 64 word memory each
+	localparam output_value = `BIT_COUNT'h0f;
 
-endmodule
-
-module singleCycleTestBenchModule #(
-	parameter inputFileName, 
-	parameter output_value
-) (
-
-);
 	logic clk, reset;
 	logic result;
 	logic [31:0] vector_num, errors, instuction_number;
@@ -74,7 +67,7 @@ module singleCycleTestBenchModule #(
 			end
 
 			//Check if correct result was computed
-			if(dut.MemEn && dut.MemWrite && dut.MemAdr === 32'hC) begin
+			if(dut.MemEn && dut.MemWriteEn && dut.MemAdr === 32'hC) begin
 				if(dut.MemWriteData === output_value) begin
 					$display("Correct value computed!");
 				end else begin

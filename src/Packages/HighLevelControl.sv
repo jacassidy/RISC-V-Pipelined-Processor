@@ -33,14 +33,9 @@ package HighLevelControl;
     typedef enum logic[1:0] {
         PCpImm,
         PCp4,
-        WriteData
-
+        WriteData,
+        LoadImm
     } miscSrc;
-
-    // typedef enum logic {
-    //     Rs1     = 1'b0, 
-    //     OldPC   = 1'b1
-    // } aluSrcA;
 
     typedef enum logic {  
         Rs2     = 1'b0,
@@ -57,6 +52,8 @@ package HighLevelControl;
         SLTU,
 
         `ifdef BIT_COUNT_64
+            ADDW,
+            SUBW,
             SLLW,
             SRLW,
             SRAW,
@@ -70,10 +67,9 @@ package HighLevelControl;
     } aluOperation;
 
     //Could feed all data out of ALU and combine with this mux
-    typedef enum logic[1:0] {
+    typedef enum logic {
         ALU,
-        ALUOpB,
-        UpdatedPC
+        Misc
     } computeSrc;
 
     typedef enum logic {
@@ -94,5 +90,21 @@ package HighLevelControl;
 
         NO_TRUNC
     } truncSrc;
+
+    `ifdef BIT_COUNT_64
+
+        typedef enum logic[1:0] {
+            Rs1_NO_FORWARD,
+            Rs1_COMPUTE,
+            Rs1_MEMORY
+        } rs1ForwardSrc;
+
+        typedef enum logic[1:0] {
+            Rs2_NO_FORWARD,
+            Rs2_COMPUTE,
+            Rs2_MEMORY
+        } rs2ForwardSrc;
+
+    `endif
 
 endpackage

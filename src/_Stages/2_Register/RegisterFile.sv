@@ -3,24 +3,25 @@
 `include "parameters.svh"
 
 module registerFile #(
-    parameter REGISTER_COUNT
+    parameter REGISTER_COUNT,
+
+    localparam REGISTER_SELECTION_WIDTH = $clog2(REGISTER_COUNT)
 ) (
-    input logic clk,
-    input logic reset,
-    input logic WriteEnable,
+    input   logic                               clk,
+    input   logic                               reset,
+    input   logic                               WriteEn,
 
-    input logic[$clog2(REGISTER_COUNT)-1 : 0] rs1Adr,
-    input logic[$clog2(REGISTER_COUNT)-1 : 0] rs2Adr,
-    input logic[$clog2(REGISTER_COUNT)-1 : 0] rd1Adr,
+    input   logic[$clog2(REGISTER_COUNT)-1:0]   rs1Adr,
+    input   logic[$clog2(REGISTER_COUNT)-1:0]   rs2Adr,
+    input   logic[$clog2(REGISTER_COUNT)-1:0]   rd1Adr,
 
-    input logic[`BIT_COUNT-1 : 0] Rd1,
+    input   logic[`BIT_COUNT-1:0]               Rd1,
 
-    output logic[`BIT_COUNT-1 : 0] Rs1,
-    output logic[`BIT_COUNT-1 : 0] Rs2
+    output  logic[`BIT_COUNT-1:0]               Rs1,
+    output  logic[`BIT_COUNT-1:0]               Rs2
 );
-    localparam REGISTER_SELECTION_WIDTH = $clog2(REGISTER_COUNT);
 
-    logic [`BIT_COUNT-1 : 0] register_values[REGISTER_COUNT-1:0]; //output values of registers held 
+    logic[`BIT_COUNT-1:0] register_values[REGISTER_COUNT-1:0]; //output values of registers held 
 
     //Defining Registers 
 
@@ -31,8 +32,7 @@ module registerFile #(
     generate
         for (i = 1; i < REGISTER_COUNT; i++) begin
             flopRE #(.WIDTH(`BIT_COUNT)) flop(.clk, .reset, 
-                //logic'
-                .en(WriteEnable && rd1Adr == i[REGISTER_SELECTION_WIDTH-1 : 0]), 
+                .en(WriteEn && rd1Adr == i[REGISTER_SELECTION_WIDTH-1 : 0]), 
                 .D(Rd1), .Q(register_values[i]));
         end
     endgenerate

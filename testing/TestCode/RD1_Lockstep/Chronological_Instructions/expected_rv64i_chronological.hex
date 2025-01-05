@@ -34,6 +34,8 @@ xxxxxxxxxxxxxxxx    //nop
 FFFFFFFFFFFFFF6F    //srai long
 FFFFF6F000000000    //sll
 FFFFF6F00FFFFF6F    //or
+000000001000076E    //addiw
+FFFFFFFFFFFFF801    //subw
 FFFFFFFFFF6F0000    //slliw
 0000000000000FFF    //srliw
 0000000000000FFF    //sraiw

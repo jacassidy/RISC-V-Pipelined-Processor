@@ -9,26 +9,28 @@ module vectorStorage #(
     input   logic                       clk,
     input   logic                       reset,
     
-    input   logic                       MemEn,
-    input   logic                       WriteEnable,
-    input   logic[(BIT_COUNT/8)-1:0]   ByteEn,
+    input   logic                       En,
+    input   logic                       WriteEn,
+    input   logic[(BIT_COUNT/8)-1:0]    ByteEn,
 
     input   logic[ADRESS_SIZE-1:0]      MemoryAdress,
-    input   logic[BIT_COUNT-1:0]       InputData,
+    input   logic[BIT_COUNT-1:0]        InputData,
 
-    output  logic[BIT_COUNT-1:0]       MemData
+    output  logic[BIT_COUNT-1:0]        MemData
 );
 
     logic[BIT_COUNT-1:0] Memory[MEMORY_SIZE_WORDS-1:0];
 
-    assign MemData = MemEn ? Memory[MemoryAdress>>2] : 'x;
+    assign MemData = En ? Memory[MemoryAdress>>2] : 'x;
 
     always_ff @(posedge clk) begin
         if (reset) begin
+
             for (int i = 0; i < MEMORY_SIZE_WORDS; i++) begin
                 Memory[i] <= 'x;
             end
-        end else if (WriteEnable && MemEn) begin
+
+        end else if (WriteEn && En) begin
             logic[BIT_COUNT-1:0] LocalMemData;
 
             LocalMemData = Memory[MemoryAdress>>2];
