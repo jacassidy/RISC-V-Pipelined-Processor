@@ -20,14 +20,6 @@ Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 Top level modules:
 	RD1_Lockstep_TestBench
 
-} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ComputeCore.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ComputeCore.sv
-Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
--- Compiling module computeCore
--- Importing package HighLevelControl
-
-Top level modules:
-	computeCore
-
 } {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/Controller.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/Controller.sv
 Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 -- Compiling package Controller_sv_unit
@@ -40,9 +32,19 @@ Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 -- Compiling module uTypeController
 -- Compiling module jTypeController
 -- Compiling module bTypeController
+-- Compiling module rwTypeController
+-- Compiling module iwTypeController
 
 Top level modules:
 	controller
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ComputeCore.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ComputeCore.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module computeCore
+-- Importing package HighLevelControl
+
+Top level modules:
+	computeCore
 
 } {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Packages/HighLevelControl.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Packages/HighLevelControl.sv
 Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
@@ -90,6 +92,16 @@ Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 Top level modules:
 	branchHandler
 
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir/parameters.svh {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir/parameters.svh
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/DoubleMemoryCore.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/DoubleMemoryCore.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module doubleMemoryCore
+
+Top level modules:
+	doubleMemoryCore
+
 } {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/3_Computational/ALU/BehavioralALU.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/3_Computational/ALU/BehavioralALU.sv
 Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 -- Compiling package BehavioralALU_sv_unit
@@ -108,6 +120,13 @@ Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 Top level modules:
 	truncator
 
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Memory/VectorStorage.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Memory/VectorStorage.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module vectorStorage
+
+Top level modules:
+	vectorStorage
+
 } {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/ImmediateExtender.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/ImmediateExtender.sv
 Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 -- Compiling package ImmediateExtender_sv_unit
@@ -116,13 +135,6 @@ Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
 
 Top level modules:
 	immediateExtender
-
-} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Memory/VectorStorage.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Memory/VectorStorage.sv
-Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
--- Compiling module vectorStorage
-
-Top level modules:
-	vectorStorage
 
 } {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/1_Instruction/PCUpdateHandler.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/1_Instruction/PCUpdateHandler.sv
 Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024

@@ -71,38 +71,45 @@ module hazzardUnit #(
         case(HazzardState)
 
             Listening: begin
-                if (RegWrite_C && rd1Adr_C != 0) begin
-                    //if register is being written determine the forwarding
-                    
-                    if (rs1Adr_R == rd1Adr_C) begin
-                        //if its a load then must delay a cycle
-                        if(MemEn_C) begin
-                            HazzardStateNext = LoadStall;
-                            Rs1ForwardSrcNext = HighLevelControl::Rs1_TRUNCATED_RESULT;
-                        end else 
-                            Rs1ForwardSrcNext = HighLevelControl::Rs1_COMPUTE_RESULT;
-                    end
-                    
-                    if (rs2Adr_R != 0 && rs2Adr_R == rd1Adr_C) begin
-                        //if its a load then must delay a cycle
-                        if(MemEn_C) begin
-                            HazzardStateNext = LoadStall;
-                            Rs2ForwardSrcNext = HighLevelControl::Rs2_TRUNCATED_RESULT;
-                        end else 
-                            Rs2ForwardSrcNext = HighLevelControl::Rs2_COMPUTE_RESULT;
-                    end
-                    
-                end else if (RegWrite_M && rd1Adr_M != 0) begin
+                //if forwarding from C stage
+                if (RegWrite_C && rd1Adr_C != 0 && rs1Adr_R == rd1Adr_C) begin
 
-                        if(rs1Adr_R == rd1Adr_M) begin
-                            Rs1ForwardSrcNext = HighLevelControl::Rs1_TRUNCATED_RESULT;
-                        end
+                    //if its a load then must delay a cycle
+                    if(MemEn_C) begin
 
-                        if(rs2Adr_R == rd1Adr_M) begin
-                            Rs2ForwardSrcNext = HighLevelControl::Rs2_TRUNCATED_RESULT;
-                        end
+                        HazzardStateNext = LoadStall;
+                        Rs1ForwardSrcNext = HighLevelControl::Rs1_TRUNCATED_RESULT;
+
+                    end else begin
+
+                        Rs1ForwardSrcNext = HighLevelControl::Rs1_COMPUTE_RESULT;
+
+                    end
+                end else if (RegWrite_M && rd1Adr_M != 0 && rs1Adr_R == rd1Adr_M) begin
+
+                    Rs1ForwardSrcNext = HighLevelControl::Rs1_TRUNCATED_RESULT;
 
                 end
+                //if forwarding from C stage
+                if (RegWrite_C && rd1Adr_C != 0 && rs2Adr_R == rd1Adr_C) begin    
+
+                    //if its a load then must delay a cycle
+                    if(MemEn_C) begin
+
+                        HazzardStateNext = LoadStall;
+                        Rs2ForwardSrcNext = HighLevelControl::Rs2_TRUNCATED_RESULT;
+
+                    end else begin
+
+                        Rs2ForwardSrcNext = HighLevelControl::Rs2_COMPUTE_RESULT;
+
+                    end
+                end else if(RegWrite_M && rd1Adr_M != 0 && rs2Adr_R == rd1Adr_M) begin
+
+                    Rs2ForwardSrcNext = HighLevelControl::Rs2_TRUNCATED_RESULT;
+
+                end
+
             end
 
             LoadStall: begin

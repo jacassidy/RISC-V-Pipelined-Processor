@@ -14,7 +14,7 @@ typedef struct packed {
     HighLevelControl::conditionalPCSrc      ConditionalPCSrc;
 
     HighLevelControl::immSrc                ImmSrc;
-    HighLevelControl::miscSrc               MiscSrc;
+    HighLevelControl::passthroughSrc               PassthroughSrc;
 
     HighLevelControl::aluSrcB               AluSrcB;
     HighLevelControl::aluOperation          AluOperation;
@@ -26,55 +26,23 @@ typedef struct packed {
 } controlSignals;
 
 function automatic void setControllerX(ref controlSignals ctrl);
-    `ifndef HARDWARE_IMPLEMENATION
-        `ifdef PIPELINED //if pipelining, issue can occur where registers are reset and a forward is incorrectly attempted resulting in undesired x forwarded
-            //In theory this should not be a problem under a true hardware implementation
-            ctrl.signals            = `SIGNAL_SIZE'b0;
+    
+    //{RegWrite, MemEn, MemWrite,      ByteEn}
+    ctrl.signals            = `SIGNAL_SIZE'b0;
 
-            ctrl.PCSrc              = HighLevelControl::pcSrc'(0);
-            ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'(0);
+    ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
+    ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
 
-            ctrl.ImmSrc             = HighLevelControl::immSrc'(0);
-            ctrl.MiscSrc            = HighLevelControl::miscSrc'(0);
+    ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
+    ctrl.PassthroughSrc            = HighLevelControl::passthroughSrc'('x);
 
-            ctrl.AluSrcB            = HighLevelControl::aluSrcB'(0);
-            ctrl.AluOperation       = HighLevelControl::aluOperation'(0);
+    ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
+    ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
 
-            ctrl.ComputeSrc         = HighLevelControl::computeSrc'(0);
-            ctrl.ResultSrc          = HighLevelControl::resultSrc'(0);
-            ctrl.TruncSrc           = HighLevelControl::truncSrc'(0);
-        `else 
-            ctrl.signals            = 'x;
+    ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
+    ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
+    ctrl.TruncSrc           = HighLevelControl::truncSrc'('x);
 
-            ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
-            ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
-
-            ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
-            ctrl.MiscSrc            = HighLevelControl::miscSrc'('x);
-
-            ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
-            ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
-
-            ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
-            ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
-            ctrl.TruncSrc           = HighLevelControl::truncSrc'('x);
-        `endif
-    `else
-        ctrl.signals            = 'x;
-
-            ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
-            ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
-
-            ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
-            ctrl.MiscSrc            = HighLevelControl::miscSrc'('x);
-
-            ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
-            ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
-
-            ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
-            ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
-            ctrl.TruncSrc           = HighLevelControl::truncSrc'('x);
-    `endif
     
 endfunction
 
@@ -88,7 +56,7 @@ module controller #(
     output logic                                RegWrite_R,
 
     output HighLevelControl::immSrc             ImmSrc_R,
-    output HighLevelControl::miscSrc            MiscSrc_R,
+    output HighLevelControl::passthroughSrc            PassthroughSrc_R,
 
     output HighLevelControl::aluSrcB            AluSrcB_R,
     output HighLevelControl::aluOperation       AluOperation_R,
@@ -123,7 +91,7 @@ module controller #(
     assign ConditionalPCSrc_R                                       = Controller.ConditionalPCSrc;
 
     assign ImmSrc_R                                                 = Controller.ImmSrc;
-    assign MiscSrc_R                                                = Controller.MiscSrc;
+    assign PassthroughSrc_R                                                = Controller.PassthroughSrc;
 
     assign AluSrcB_R                                                = Controller.AluSrcB;
     assign AluOperation_R                                           = Controller.AluOperation;
@@ -148,7 +116,6 @@ module controller #(
 
     always_comb begin
         
-
         casex(opcode)
             7'b0110011: Controller      = RType;
             7'b0010011: Controller      = IType;
@@ -163,11 +130,8 @@ module controller #(
                 7'b0011011: Controller  = IWType;
             `endif 
 
-            default: begin
-                setControllerX(Controller);
-                //{RegWrite, MemEn, MemWrite,      ByteEn}
-                Controller.signals      = `SIGNAL_SIZE'b0_0_0_000;
-            end
+            default: setControllerX(Controller);
+                        
         endcase
     end
     
@@ -185,7 +149,7 @@ module rTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::immSrc'('x);
-    assign Controller.MiscSrc           = HighLevelControl::miscSrc'('x);
+    assign Controller.PassthroughSrc           = HighLevelControl::passthroughSrc'('x);
 
     assign Controller.AluSrcB           = HighLevelControl::Rs2;
 
@@ -229,7 +193,7 @@ module iTypeController(
     assign Controller.PCSrc             = HighLevelControl::PCp4_I;
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
-    assign Controller.MiscSrc           = HighLevelControl::miscSrc'('x);
+    assign Controller.PassthroughSrc           = HighLevelControl::passthroughSrc'('x);
 
     assign Controller.AluSrcB           = HighLevelControl::Imm;
 
@@ -323,7 +287,7 @@ module lTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::IType;
-    assign Controller.MiscSrc           = HighLevelControl::miscSrc'('x);
+    assign Controller.PassthroughSrc           = HighLevelControl::passthroughSrc'('x);
 
     assign Controller.AluSrcB           = HighLevelControl::Imm;
     assign Controller.AluOperation      = HighLevelControl::ADD;
@@ -372,7 +336,7 @@ module sTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::SType;
-    assign Controller.MiscSrc           = HighLevelControl::WriteData;
+    assign Controller.PassthroughSrc           = HighLevelControl::WriteData;
 
     assign Controller.AluSrcB           = HighLevelControl::Imm;
     assign Controller.AluOperation      = HighLevelControl::ADD;
@@ -421,7 +385,7 @@ module uTypeController(
 
     assign Controller.ImmSrc            = HighLevelControl::UType;
 
-    assign Controller.ComputeSrc        = HighLevelControl::Misc; 
+    assign Controller.ComputeSrc        = HighLevelControl::Passthrough; 
     assign Controller.ResultSrc         = HighLevelControl::Compute;
     assign Controller.TruncSrc          = HighLevelControl::NO_TRUNC;
 
@@ -430,11 +394,11 @@ module uTypeController(
         Controller.signals                  = `SIGNAL_SIZE'b1_0_0_0000; 
 
         casex(opcode)
-            7'b0110111: Controller.MiscSrc  = HighLevelControl::LoadImm;  //LUI
-            7'b0010111: Controller.MiscSrc  = HighLevelControl::PCpImm;   //AUIPC
+            7'b0110111: Controller.PassthroughSrc  = HighLevelControl::LoadImm;  //LUI
+            7'b0010111: Controller.PassthroughSrc  = HighLevelControl::PCpImm;   //AUIPC
             
             default:    begin
-                Controller.MiscSrc          = HighLevelControl::miscSrc'('x); 
+                Controller.PassthroughSrc          = HighLevelControl::passthroughSrc'('x); 
                 Controller.signals          = `SIGNAL_SIZE'b0;
             end
             
@@ -452,11 +416,11 @@ module jTypeController(
 
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
     
-    assign Controller.MiscSrc           = HighLevelControl::PCp4;
+    assign Controller.PassthroughSrc           = HighLevelControl::PCp4;
 
     assign Controller.AluOperation      = HighLevelControl::aluOperation'('x);
 
-    assign Controller.ComputeSrc        = HighLevelControl::Misc;
+    assign Controller.ComputeSrc        = HighLevelControl::Passthrough;
     assign Controller.ResultSrc         = HighLevelControl::Compute;
     assign Controller.TruncSrc          = HighLevelControl::NO_TRUNC;
 
@@ -505,7 +469,7 @@ module bTypeController(
     assign Controller.PCSrc             = HighLevelControl::Branch_C;
 
     assign Controller.ImmSrc            = HighLevelControl::BType;
-    assign Controller.MiscSrc           = HighLevelControl::PCpImm;
+    assign Controller.PassthroughSrc           = HighLevelControl::PCpImm;
 
     assign Controller.AluSrcB           = HighLevelControl::Rs2;
     assign Controller.AluOperation      = HighLevelControl::SUB;
@@ -549,7 +513,7 @@ module rwTypeController(
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
     assign Controller.ImmSrc            = HighLevelControl::immSrc'('x);
-    assign Controller.MiscSrc           = HighLevelControl::miscSrc'('x);
+    assign Controller.PassthroughSrc           = HighLevelControl::passthroughSrc'('x);
 
     assign Controller.AluSrcB           = HighLevelControl::Rs2;
 
@@ -589,7 +553,7 @@ module iwTypeController(
     assign Controller.PCSrc             = HighLevelControl::PCp4_I;
     assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
 
-    assign Controller.MiscSrc           = HighLevelControl::miscSrc'('x);
+    assign Controller.PassthroughSrc           = HighLevelControl::passthroughSrc'('x);
 
     assign Controller.AluSrcB           = HighLevelControl::Imm;
 

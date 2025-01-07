@@ -97,14 +97,14 @@ module behavioralAlu #(
                     {Carry, Alu32BitResult} = AluOperandA[`WORD_SIZE-1:0] + AluOperandB[`WORD_SIZE-1:0];
                     AluResult               = {{(`WORD_SIZE) {Alu32BitResult[`WORD_SIZE-1]}}, Alu32BitResult};
                     oVerflow                = ~(AluOperandA[`WORD_SIZE-1] ^ AluOperandB[`WORD_SIZE-1]) 
-                                            & (AluOperandA[`WORD_SIZE-1] ^ AluResult[`WORD_SIZE-1]);
+                                            & (AluOperandA[`WORD_SIZE-1] ^ Alu32BitResult[`WORD_SIZE-1]);
                 end
                 SUBW: begin
                     logic[`WORD_SIZE-1:0] Alu32BitResult;
                     {Carry, Alu32BitResult} = AluOperandA[`WORD_SIZE-1:0] - AluOperandB[`WORD_SIZE-1:0];
                     AluResult               = {{(`WORD_SIZE) {Alu32BitResult[`WORD_SIZE-1]}}, Alu32BitResult};
                     oVerflow                = ~(AluOperandA[`WORD_SIZE-1] ^ AluOperandB[`WORD_SIZE-1] ^ 1'b1) 
-                                            & (AluOperandA[`WORD_SIZE-1] ^ AluResult[`WORD_SIZE-1]);
+                                            & (AluOperandA[`WORD_SIZE-1] ^ Alu32BitResult[`WORD_SIZE-1]);
                 end
 
                 //32 bit opperations in RV64I

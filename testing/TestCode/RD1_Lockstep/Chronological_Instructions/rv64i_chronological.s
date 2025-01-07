@@ -44,8 +44,8 @@ _start:
     or   x5, x2, x3
 
     #32 Bit instructions
-    addiw x1, x5, 0x7FF
-    subw  x1, x5, x1
+    addiw x1, x5, 0x7FF         #FFFFF6F00FFFFF6F 
+    subw  x1, x5, x1            #FFFFF6F00FFFFF6F - 000000001000076E
     slliw x1, x5, 16
     srliw x1, x5, 16
     sraiw x1, x5, 16

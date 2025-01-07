@@ -35,7 +35,7 @@ package HighLevelControl;
         PCp4,
         WriteData,
         LoadImm
-    } miscSrc;
+    } passthroughSrc;
 
     typedef enum logic {  
         Rs2     = 1'b0,
@@ -69,7 +69,7 @@ package HighLevelControl;
     //Could feed all data out of ALU and combine with this mux
     typedef enum logic {
         ALU,
-        Misc
+        Passthrough
     } computeSrc;
 
     typedef enum logic {

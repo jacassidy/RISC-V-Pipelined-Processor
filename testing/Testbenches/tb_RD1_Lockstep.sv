@@ -5,7 +5,7 @@
 //Rd1 lockstep testbench
 module RD1_Lockstep_TestBench();
 
-	//Supposed to be all RV32I instructions
+	//Supposed to be all RV32I instructions (not pipelined)
 	// localparam inputFileName 	="../TestCode/RD1_Lockstep/full_RV32I.hex";
 	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/expected_full_RV32I_outputs.hex";
 	// localparam BIT_COUNT 		= 32;
@@ -15,15 +15,15 @@ module RD1_Lockstep_TestBench();
 	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv32i_chronological.hex"; 
 	// localparam BIT_COUNT 		= 32;
 
-	//Full RV64I chronological test
-	// localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";
-	// localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv64i_chronological.hex";
-	// localparam BIT_COUNT 			= 64;
-
 	//Full Pipelined RV32I chronological test
 	// localparam inputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex"; 
 	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_pipelined_rv32i_chronological.hex"; 
 	// localparam BIT_COUNT 		= 32;
+
+	//Full RV64I chronological test
+	// localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";
+	// localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv64i_chronological.hex";
+	// localparam BIT_COUNT 			= 64;
 
 	//Full Pipelined RV64I chronological test
 	localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";

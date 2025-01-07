@@ -29,14 +29,14 @@ module computeCore #(
 
                         ////****R Stage****////
     logic[`WORD_SIZE-1:0]               Instr_R;
-    logic[`BIT_COUNT-1:0]               PCp4_R, PC_R, Rs1_R, Rs2_R, Imm_R, PCpImm_R, Misc_R;
+    logic[`BIT_COUNT-1:0]               PCp4_R, PC_R, Rs1_R, Rs2_R, Imm_R, PCpImm_R, Passthrough_R;
     logic[$clog2(`WORD_SIZE)-1:0]       rs1Adr_R, rs2Adr_R;
     logic[$clog2(`WORD_SIZE)-1:0]       rd1Adr_R;
 
     //Controller Signals
     HighLevelControl::immSrc            ImmSrc_R;
     HighLevelControl::aluSrcB           AluSrcB_R;
-    HighLevelControl::miscSrc           MiscSrc_R;
+    HighLevelControl::passthroughSrc           PassthroughSrc_R;
     HighLevelControl::pcSrc             PCSrc_R;
 
     //C
@@ -57,7 +57,7 @@ module computeCore #(
     HighLevelControl::truncSrc          TruncSrc_R;
 
                         ////****C Stage****////
-    logic[`BIT_COUNT-1:0]               Misc_C, AluOperandA_C, AluOperandB_C, AluResult_C, ComputeResult_C, MemWriteData_C;
+    logic[`BIT_COUNT-1:0]               Passthrough_C, AluOperandA_C, AluOperandB_C, AluResult_C, ComputeResult_C, MemWriteData_C;
     logic[$clog2(`WORD_SIZE)-1:0]       rd1Adr_C;
     logic[`BIT_COUNT-1:0]               AluHazzardSafeOperandA_C, AluHazzardSafeOperandB_C;
 
@@ -159,7 +159,7 @@ module computeCore #(
 
     //Controller
     controller Controller(.Instr_R,
-        .PCSrc_R, .ConditionalPCSrc_R, .RegWrite_R, .ImmSrc_R, .MiscSrc_R, .AluSrcB_R, 
+        .PCSrc_R, .ConditionalPCSrc_R, .RegWrite_R, .ImmSrc_R, .PassthroughSrc_R, .AluSrcB_R, 
         .AluOperation_R, .ComputeSrc_R, .MemEn_R, .MemWriteEn_R, .MemByteEn_R, .ResultSrc_R, .TruncSrc_R);
 
     //Register File
@@ -188,15 +188,15 @@ module computeCore #(
     //Jump / Branch Adder
     assign PCpImm_R = Imm_R + PC_R;
 
-    //Misc Mux
+    //Passthrough Mux
     always_comb begin
-        casex(MiscSrc_R)
-            HighLevelControl::PCpImm:       Misc_R = PCpImm_R;
-            HighLevelControl::PCp4:         Misc_R = PCp4_R;
-            HighLevelControl::WriteData:    Misc_R = Rs2_R;
-            HighLevelControl::LoadImm:      Misc_R = Imm_R;
+        casex(PassthroughSrc_R)
+            HighLevelControl::PCpImm:       Passthrough_R = PCpImm_R;
+            HighLevelControl::PCp4:         Passthrough_R = PCp4_R;
+            HighLevelControl::WriteData:    Passthrough_R = Rs2_R;
+            HighLevelControl::LoadImm:      Passthrough_R = Imm_R;
 
-            default:                        Misc_R = 'x;
+            default:                        Passthrough_R = 'x;
         endcase
     end
 
@@ -204,8 +204,8 @@ module computeCore #(
 
         //Data
         flopRS #(.WIDTH(`BIT_COUNT * 3 + $clog2(`WORD_SIZE))) DataFlopRC(.clk, .reset, .stall(StallRC),
-                .D({AluOperandA_R, AluOperandB_R, Misc_R, rd1Adr_R}), 
-                .Q({AluOperandA_C, AluOperandB_C, Misc_C, rd1Adr_C})
+                .D({AluOperandA_R, AluOperandB_R, Passthrough_R, rd1Adr_R}), 
+                .Q({AluOperandA_C, AluOperandB_C, Passthrough_C, rd1Adr_C})
             );
 
         //Signals
@@ -232,7 +232,7 @@ module computeCore #(
         //Data
         assign AluOperandA_C            = AluOperandA_R;
         assign AluOperandB_C            = AluOperandB_R;
-        assign Misc_C                   = Misc_R;
+        assign Passthrough_C                   = Passthrough_R;
         assign rd1Adr_C                 = rd1Adr_R;
 
         //Signals
@@ -300,7 +300,7 @@ module computeCore #(
     always_comb begin
         casex(ComputeSrc_C)
             HighLevelControl::ALU:          ComputeResult_C = AluResult_C;
-            HighLevelControl::Misc:         ComputeResult_C = Misc_C;
+            HighLevelControl::Passthrough:         ComputeResult_C = Passthrough_C;
 
             default:                        ComputeResult_C = 'x;
 
@@ -316,7 +316,7 @@ module computeCore #(
         always_comb begin
             
             casex(Rs2ForwardSrc)
-                HighLevelControl::Rs2_NO_FORWARD:       MemWriteData_C = Misc_C;
+                HighLevelControl::Rs2_NO_FORWARD:       MemWriteData_C = Passthrough_C;
                 HighLevelControl::Rs2_COMPUTE_RESULT:   MemWriteData_C = ComputeResult_M;
                 HighLevelControl::Rs2_TRUNCATED_RESULT: MemWriteData_C = Rd1_W;
 
@@ -327,7 +327,7 @@ module computeCore #(
 
     `else
 
-        assign MemWriteData_C = Misc_C;
+        assign MemWriteData_C = Passthrough_C;
 
     `endif
 
@@ -463,7 +463,7 @@ module computeCore #(
     //PC Source Select Mux implemented with branch prediction
     pcUpdateHandler PCUpdateHandler(.PCSrc_R(PCSrc_R), 
             .PCSrcPostConditional_C, .Predict(1'b0), .Prediction(`BIT_COUNT'b0), .PredictionCorrect_R(1'b0), 
-            .PredictionCorrect_C, .PCp4_I, .AluAdd_C(AluResult_C), .PCpImm_R, .UpdatedPC_C(Misc_C), .PCNext_I
+            .PredictionCorrect_C, .PCp4_I, .AluAdd_C(AluResult_C), .PCpImm_R, .UpdatedPC_C(Passthrough_C), .PCNext_I
             
             `ifdef PIPELINED
                 , .FlushIR, .FlushRC
