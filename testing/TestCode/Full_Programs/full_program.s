@@ -1,64 +1,67 @@
 .global _start
 
 _start:
-    li x1, 0xFEBBA999 #12
-    slli x1, x1, 16     #3
-    slli x1, x1, 16     #4
-    li x2, 0x98765432   #56
-    add x1, x1, x2      #7
+    # li x1, 0xFEBBA999 #12
+    # slli x1, x1, 16     #3
+    # slli x1, x1, 16     #4
+    # li x2, 0x98765432   #56
+    # add x1, x1, x2      #7
+    # j simple_test
+    # nop
+    # addi x4, x0, 10
 
-
-    addi x1, x0, 0x10   #1
-    li   x2, -1         #2
+simple_test:
+    addi x1, x4, 0x10   #1                  x1 = 16
+    li   x2, -1         #2                  x2 = -1
     nop                 #3
-    li   x3, 16         #4
+    li   x3, 16         #4                  x3 = 16
 
-    bge x2, x3, error    #5
-    bge x3, x2, first_branch    #6
-    j error                         #7
+    bge x2, x3, error           #5          -1 >= 16
+    bge x3, x2, first_branch    #6          16 >= -1        //correctly handled
+    j error                     #7
 
 first_branch:
-    blt x3, x2, error   #8                  //Working
-    blt x2, x3, second_branch   #9
+    blt x3, x2, error           #8          16 < -1       
+    blt x2, x3, second_branch   #9          -1 < 16         //correcly handled
     j error                     #a
 
 second_branch:
-    blt x1, x3, error           #b          //working
-    bge x1, x3, third_branch    #c
+    blt x1, x3, error           #b          16 < 16         
+    bge x1, x3, third_branch    #c          16 <= 16        //correctly handled
 
 error:
     j error                     #d
 
 third_branch:
-    bne x1, x3, error           #e          //working
-    bne x1, x2, test2           #f
+    bne x1, x3, error           #e          16 != 16   
+    bne x1, x2, test2           #f          16 != -1        //correctly handled
     j error                     #10
 test2:
-    bne x2, x1, fourth_branch   #11         //Wokring
+    bne x2, x1, fourth_branch   #11         -1 != 16        //correctly handled
     j error                     #12
 
 fourth_branch:
-    beq x1, x2, error           #13         //working
-    beq x1, x3, fifth_branch     #14
+    beq x1, x2, error           #13         16 == -1        
+    beq x1, x3, fifth_branch    #14         16 == 16        //correctly handled
     j error                     #15
 
 fifth_branch:
-    bltu x2, x1, error          #16         //working
-    bltu x1, x2, sixth_branch   #17         
+    bltu x2, x1, error          #16         (unsigned) -1 < 16  
+    bltu x1, x2, sixth_branch   #17         16 < (unsigned) -1      //correcly handled
     j error                     #18
 
 sixth_branch:
-    bgeu x1, x2, error          #19         //working
-    bgeu x2, x1, seventh_branch #1a
+    bgeu x1, x2, error          #19         16 >= (unsigned) -1     
+    bgeu x2, x1, seventh_branch #1a         (unsigned) -1 >= 16     //correcly handled
     j error                     #1b
 
 seventh_branch:
-    bltu x1, x3, error          #1c         //working
-    bgeu x1, x3, factorial_init #1d
+    bltu x1, x3, error          #1c         16 < 16    (unsigned)
+    bgeu x1, x3, factorial_init #1d         16 >= 16   (unsigned)   //correcly handled
     j error                     #1e
 
 factorial_init:
-    li a0, 5                    #1f         //working
+    li a0, 5                    #1f         
     li sp, 0x100                #20
     jal ra, factorial           #21
     sw a0, 0x0C(x0)              #22
@@ -103,4 +106,9 @@ recursive_function:
     
 end:
     nop                                                     #39
+    nop                                                     #40
+    nop                                                     #41
+    nop                                                     #42
+    nop                                                     #43
+
 

@@ -2,6 +2,7 @@
 
 `include "parameters.svh"
 
+`ifdef PIPELINED
 module hazzardUnit #(
 
 )(
@@ -12,12 +13,14 @@ module hazzardUnit #(
     input   logic[$clog2(`WORD_SIZE)-1:0]       rs2Adr_R,
 
     input   logic[$clog2(`WORD_SIZE)-1:0]       rd1Adr_C,
+    input   logic[$clog2(`WORD_SIZE)-1:0]       rd1Adr_M,
 
     input   logic                               MemEn_C,
-    input   logic                               RegWrite_C
+    input   logic                               RegWrite_C,
+    input   logic                               RegWrite_M,
 
     output  HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc,
-    output  HighLevelControl::rs21ForwardSrc    Rs2ForwardSrc,
+    output  HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc,
 
     output  logic                               FlushCM,
     output  logic                               StallPC,
@@ -27,7 +30,7 @@ module hazzardUnit #(
 );
 
     HighLevelControl::rs1ForwardSrc     Rs1ForwardSrcNext;
-    HighLevelControl::rs21ForwardSrc    Rs2ForwardSrcNext;
+    HighLevelControl::rs2ForwardSrc     Rs2ForwardSrcNext;
 
     //Forwarding singals need to be delayed one clock cycle due to forwarding being determined in R stage of next instruction
     always_ff @(posedge clk) begin
@@ -68,25 +71,37 @@ module hazzardUnit #(
         case(HazzardState)
 
             Listening: begin
-                if (RegWrite_C) begin
+                if (RegWrite_C && rd1Adr_C != 0) begin
                     //if register is being written determine the forwarding
+                    
                     if (rs1Adr_R == rd1Adr_C) begin
                         //if its a load then must delay a cycle
-                        if(MemEn) begin
+                        if(MemEn_C) begin
                             HazzardStateNext = LoadStall;
-                            Rs1ForwardSrcNext = HighLevelControl::Rs1_MEMORY;
+                            Rs1ForwardSrcNext = HighLevelControl::Rs1_TRUNCATED_RESULT;
                         end else 
-                            Rs1ForwardSrcNext = HighLevelControl::Rs1_COMPUTE;
+                            Rs1ForwardSrcNext = HighLevelControl::Rs1_COMPUTE_RESULT;
                     end
-
-                    if (rs2Adr_R == rd1Adr_C) begin
+                    
+                    if (rs2Adr_R != 0 && rs2Adr_R == rd1Adr_C) begin
                         //if its a load then must delay a cycle
-                        if(MemEn) begin
+                        if(MemEn_C) begin
                             HazzardStateNext = LoadStall;
-                            Rs2ForwardSrcNext = HighLevelControl::Rs2_MEMORY;
+                            Rs2ForwardSrcNext = HighLevelControl::Rs2_TRUNCATED_RESULT;
                         end else 
-                            Rs2ForwardSrcNext = HighLevelControl::Rs2_COMPUTE;
+                            Rs2ForwardSrcNext = HighLevelControl::Rs2_COMPUTE_RESULT;
                     end
+                    
+                end else if (RegWrite_M && rd1Adr_M != 0) begin
+
+                        if(rs1Adr_R == rd1Adr_M) begin
+                            Rs1ForwardSrcNext = HighLevelControl::Rs1_TRUNCATED_RESULT;
+                        end
+
+                        if(rs2Adr_R == rd1Adr_M) begin
+                            Rs2ForwardSrcNext = HighLevelControl::Rs2_TRUNCATED_RESULT;
+                        end
+
                 end
             end
 
@@ -97,10 +112,11 @@ module hazzardUnit #(
                 StallRC             = 1'b1;
 
                 //absolutely genious move to reuse the same flop twice during the stall to propogate a signal two clock cycles
-                Rs1ForwardSrcNext = Rs1ForwardSrc
-                Rs2ForwardSrcNext = Rs1ForwardSrc
+                Rs1ForwardSrcNext = Rs1ForwardSrc;
+                Rs2ForwardSrcNext = Rs2ForwardSrc;
             end
         endcase
     end
 
 endmodule
+`endif

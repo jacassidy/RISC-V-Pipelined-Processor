@@ -26,20 +26,56 @@ typedef struct packed {
 } controlSignals;
 
 function automatic void setControllerX(ref controlSignals ctrl);
-    ctrl.signals            = 'x;
+    `ifndef HARDWARE_IMPLEMENATION
+        `ifdef PIPELINED //if pipelining, issue can occur where registers are reset and a forward is incorrectly attempted resulting in undesired x forwarded
+            //In theory this should not be a problem under a true hardware implementation
+            ctrl.signals            = `SIGNAL_SIZE'b0;
 
-    ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
-    ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
+            ctrl.PCSrc              = HighLevelControl::pcSrc'(0);
+            ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'(0);
 
-    ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
-    ctrl.MiscSrc            = HighLevelControl::miscSrc'('x);
+            ctrl.ImmSrc             = HighLevelControl::immSrc'(0);
+            ctrl.MiscSrc            = HighLevelControl::miscSrc'(0);
 
-    ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
-    ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
+            ctrl.AluSrcB            = HighLevelControl::aluSrcB'(0);
+            ctrl.AluOperation       = HighLevelControl::aluOperation'(0);
 
-    ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
-    ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
-    ctrl.TruncSrc           = HighLevelControl::truncSrc'('x);
+            ctrl.ComputeSrc         = HighLevelControl::computeSrc'(0);
+            ctrl.ResultSrc          = HighLevelControl::resultSrc'(0);
+            ctrl.TruncSrc           = HighLevelControl::truncSrc'(0);
+        `else 
+            ctrl.signals            = 'x;
+
+            ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
+            ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
+
+            ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
+            ctrl.MiscSrc            = HighLevelControl::miscSrc'('x);
+
+            ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
+            ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
+
+            ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
+            ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
+            ctrl.TruncSrc           = HighLevelControl::truncSrc'('x);
+        `endif
+    `else
+        ctrl.signals            = 'x;
+
+            ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
+            ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
+
+            ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
+            ctrl.MiscSrc            = HighLevelControl::miscSrc'('x);
+
+            ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
+            ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
+
+            ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
+            ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
+            ctrl.TruncSrc           = HighLevelControl::truncSrc'('x);
+    `endif
+    
 endfunction
 
 module controller #(
@@ -111,6 +147,8 @@ module controller #(
     `endif 
 
     always_comb begin
+        
+
         casex(opcode)
             7'b0110011: Controller      = RType;
             7'b0010011: Controller      = IType;

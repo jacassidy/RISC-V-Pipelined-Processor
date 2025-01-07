@@ -1,15 +1,20 @@
-FFFFFFFFFFFFF000    //lui           PC  0
-FFFFFFFFFFFFEDEF    //addi              4
-xxxxxxxxxxxxxxxx    //sw                8
-xxxxxxxxxxxxxxxx    //sh                C
-xxxxxxxxxxxxxxxx    //sb                10
-FFFFFFFFFFFFEDEF    //lw                14
-000000000000EDEF    //lhu               18
-00000000000000EF    //lbu               1C
-FFFFFFFFFFFFEDEF    //lh                20
-FFFFFFFFFFFFFFEF    //lb                24
-FFFFFFFFFFFFFFF0    //addi              28
-FFFFFFFFFEEDF02C    //auipc             2C
+xxxxxxxxxxxxxxxx                    //PC:   0
+xxxxxxxxxxxxxxxx    //                      4                
+xxxxxxxxxxxxxxxx    //                      8
+xxxxxxxxxxxxxxxx    //5 Stage Pipeline      C
+FFFFFFFFFFFFF000    //lui                   10      lui x1, 0xFFFFF
+FFFFFFFFFFFFEDEF    //addi                  14      addi x1, x1, -529
+xxxxxxxxxxxxxxxx    //sw                    18      sw x1, 0(x0)
+xxxxxxxxxxxxxxxx    //sh                    1C
+xxxxxxxxxxxxxxxx    //sb                    20
+FFFFFFFFFFFFEDEF    //lw                    24
+000000000000EDEF    //lhu                   28
+00000000000000EF    //lbu                   2C
+FFFFFFFFFFFFEDEF    //lh                    30
+FFFFFFFFFFFFFFEF    //lb                    30
+xxxxxxxxxxxxxxxx    //stall                 34
+FFFFFFFFFFFFFFF0    //addi                  38
+FFFFFFFFFEEDF02C    //auipc                 3C
 0000000000000000    //sltiu
 0000000000000001    //slti
 0000000000000054    //xori
@@ -33,7 +38,7 @@ xxxxxxxxxxxxxxxx    //nop
 0000000000000000    //slli long
 000000000FFFFF6F    //srli long
 FFFFFFFFFFFFFF6F    //srai long
-FFFFF6F000000000    //sll
+FFFFF6F000000000    //slli
 FFFFF6F00FFFFF6F    //or
 000000001000076E    //addiw
 FFFFFFFFFFFFF801    //subw
@@ -44,5 +49,6 @@ FFFFFFFFFFFFFFFF    //sraiw
 xxxxxxxxxxxxxxxx    //sd
 FFFFF6F00FFFFF6F    //ld
 00000000FFFFEDEF    //lwu
+xxxxxxxxxxxxxxxx    //stall
 00000000FFFFEDF0    //addi
 00000000FFFFEDF0    //addi

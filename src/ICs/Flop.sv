@@ -5,9 +5,9 @@ module flopR #(
 ) (
     input   logic               clk,
     input   logic               reset,
-    input   logic[WIDTH-1 : 0]  D,
+    input   logic[WIDTH-1:0]    D,
 
-    output  logic[WIDTH-1 : 0]  Q
+    output  logic[WIDTH-1:0]    Q
 );
 
     always_ff @( posedge clk ) begin 
@@ -23,9 +23,9 @@ module flopRE #(
     input   logic               clk,
     input   logic               reset,
     input   logic               en,
-    input   logic[WIDTH-1 : 0]  D,
+    input   logic[WIDTH-1:0]    D,
 
-    output  logic[WIDTH-1 : 0]  Q
+    output  logic[WIDTH-1:0]    Q
 );
 
     always_ff @( posedge clk ) begin 
@@ -41,9 +41,9 @@ module flopRS #(
     input   logic               clk,
     input   logic               reset,
     input   logic               stall,
-    input   logic[WIDTH-1 : 0]  D,
+    input   logic[WIDTH-1:0]    D,
 
-    output  logic[WIDTH-1 : 0]  Q
+    output  logic[WIDTH-1:0]    Q
 );
 
     always_ff @( posedge clk ) begin 
@@ -58,10 +58,10 @@ module flopRF #(
 ) (
     input   logic               clk,
     input   logic               reset,
-    input   logic               flush
-    input   logic[WIDTH-1 : 0]  D,
+    input   logic               flush,
+    input   logic[WIDTH-1:0]    D,
 
-    output  logic[WIDTH-1 : 0]  Q
+    output  logic[WIDTH-1:0]    Q
 );
 
     always_ff @( posedge clk ) begin 
@@ -71,16 +71,16 @@ module flopRF #(
 
 endmodule
 
-module flopRSF #(
+module flopRFS #(
     WIDTH = 32
 ) (
     input   logic               clk,
     input   logic               reset,
     input   logic               stall,
     input   logic               flush,
-    input   logic[WIDTH-1 : 0]  D,
+    input   logic[WIDTH-1:0]    D,
 
-    output  logic[WIDTH-1 : 0]  Q
+    output  logic[WIDTH-1:0]    Q
 );
 
     always_ff @( posedge clk ) begin 

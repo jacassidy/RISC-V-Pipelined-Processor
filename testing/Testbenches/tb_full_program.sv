@@ -9,7 +9,6 @@ module Full_Program_TestBench();
 	localparam output_value = `BIT_COUNT'h0f;
 
 	logic clk, reset;
-	logic result;
 	logic [31:0] vector_num, errors, instuction_number;
 	
 	//////////////////////////////////
@@ -45,7 +44,7 @@ module Full_Program_TestBench();
 		//Reset Values
 		vector_num = 1; errors = 0; reset = 1; 
 		
-		#17; //Wait to reset
+		#12; //Wait to reset
 		
 		reset = 0; //Begin
 	end

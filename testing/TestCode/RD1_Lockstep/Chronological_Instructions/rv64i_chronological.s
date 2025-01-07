@@ -11,6 +11,7 @@ _start:
     lbu x1, 0(x0)      # 8) lb x1, offset(rs1)
     lh x1, 0(x0)       # 9) lh x1, offset(rs1)
     lb x1, 0(x0)       # 10) lb x1, offset(rs1)
+    addi x1, x1, 1     
     auipc x1, 0xFEEDF  # 11) auipc x1, <imm>
     sltiu x1, x1, 10   # 12) sltiu x1, x1, imm
     slti x2, x1, 10    # 13) slti x1, x1, imm
@@ -54,9 +55,10 @@ _start:
     ld  x1, 0xc(x0)
     lwu x1, 0(x0)
 
-    # addiw
+    addi x2, x1, 1
+    addi x1, x1, 1
+
     # addw
-    # subw
     # sllw
     # srlw
     # sraw

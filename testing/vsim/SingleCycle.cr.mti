@@ -1,0 +1,136 @@
+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/Hazzard/HazzardUnit.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/Hazzard/HazzardUnit.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module hazzardUnit
+-- Importing package HighLevelControl
+
+Top level modules:
+	hazzardUnit
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/testing/Testbenches/tb_full_program.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/testing/Testbenches/tb_full_program.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module Full_Program_TestBench
+
+Top level modules:
+	Full_Program_TestBench
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/testing/Testbenches/tb_RD1_Lockstep.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/testing/Testbenches/tb_RD1_Lockstep.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module RD1_Lockstep_TestBench
+
+Top level modules:
+	RD1_Lockstep_TestBench
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ComputeCore.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ComputeCore.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module computeCore
+-- Importing package HighLevelControl
+
+Top level modules:
+	computeCore
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/Controller.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/Controller.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package Controller_sv_unit
+-- Importing package HighLevelControl
+-- Compiling module controller
+-- Compiling module rTypeController
+-- Compiling module iTypeController
+-- Compiling module lTypeController
+-- Compiling module sTypeController
+-- Compiling module uTypeController
+-- Compiling module jTypeController
+-- Compiling module bTypeController
+
+Top level modules:
+	controller
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Packages/HighLevelControl.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Packages/HighLevelControl.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package HighLevelControl
+
+Top level modules:
+	--none--
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/RegisterFile.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/RegisterFile.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module registerFile
+
+Top level modules:
+	registerFile
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ICs/Flop.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ICs/Flop.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module flopR
+-- Compiling module flopRE
+-- Compiling module flopRS
+-- Compiling module flopRF
+-- Compiling module flopRFS
+
+Top level modules:
+	flopR
+	flopRE
+	flopRS
+	flopRF
+	flopRFS
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ICs/Multiplexer.sv {2 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ICs/Multiplexer.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module mux
+** Warning: C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/ICs/Multiplexer.sv(8): (vlog-13314) Defaulting port 'input_busses' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+
+Top level modules:
+	mux
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/3_Computational/BranchHandler.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/3_Computational/BranchHandler.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package BranchHandler_sv_unit
+-- Importing package HighLevelControl
+-- Compiling module branchHandler
+
+Top level modules:
+	branchHandler
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/3_Computational/ALU/BehavioralALU.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/3_Computational/ALU/BehavioralALU.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package BehavioralALU_sv_unit
+-- Importing package HighLevelControl
+-- Compiling module behavioralAlu
+
+Top level modules:
+	behavioralAlu
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/5_Writeback/Truncator.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/5_Writeback/Truncator.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package Truncator_sv_unit
+-- Importing package HighLevelControl
+-- Compiling module truncator
+
+Top level modules:
+	truncator
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/ImmediateExtender.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/2_Register/ImmediateExtender.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package ImmediateExtender_sv_unit
+-- Importing package HighLevelControl
+-- Compiling module immediateExtender
+
+Top level modules:
+	immediateExtender
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Memory/VectorStorage.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/Memory/VectorStorage.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling module vectorStorage
+
+Top level modules:
+	vectorStorage
+
+} {} {}} C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/1_Instruction/PCUpdateHandler.sv {1 {vlog -work work -vopt -sv +incdir+C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/incdir -stats=none C:/Users/MrPugC/Documents/GitHub/RV32I-Pipelined-Processor/src/_Stages/1_Instruction/PCUpdateHandler.sv
+Questa Intel Starter FPGA Edition-64 vlog 2024.1 Compiler 2024.04 Apr 19 2024
+-- Compiling package PCUpdateHandler_sv_unit
+-- Importing package HighLevelControl
+-- Compiling module pcUpdateHandler
+
+Top level modules:
+	pcUpdateHandler
+
+} {} {}}

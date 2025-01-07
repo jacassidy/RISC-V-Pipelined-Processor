@@ -73,7 +73,7 @@ module behavioralAlu #(
                 Carry               = Sub[`BIT_COUNT];
                 AluResult           = {{(`BIT_COUNT-1) {1'b0}} , Carry};
                 oVerflow            = ~(AluOperandA[`BIT_COUNT-1] ^ AluOperandB[`BIT_COUNT-1] ^ 1'b1) 
-                                        & (AluOperandA[`BIT_COUNT-1] ^ AluResult[`BIT_COUNT-1]);
+                                        & (AluOperandA[`BIT_COUNT-1] ^ Sub[`BIT_COUNT-1]);
                 
             end
             SLT: begin //SLT
@@ -81,10 +81,11 @@ module behavioralAlu #(
                 Sub                 = AluOperandA - AluOperandB;
 
                 Carry               = Sub[`BIT_COUNT];
-                //If result is negative (sign inverted by overflow)
-                AluResult           = {{(`BIT_COUNT-1) {1'b0}} , Sub[`BIT_COUNT-1] ^ oVerflow};
                 oVerflow            = ~(AluOperandA[`BIT_COUNT-1] ^ AluOperandB[`BIT_COUNT-1] ^ 1'b1) 
-                                        & (AluOperandA[`BIT_COUNT-1] ^ AluResult[`BIT_COUNT-1]);
+                                        & (AluOperandA[`BIT_COUNT-1] ^ Sub[`BIT_COUNT-1]);
+                //If result is negative (sign inverted by overflow)
+                AluResult           = {{(`BIT_COUNT-1) {1'b0}}, Sub[`BIT_COUNT-1] ^ oVerflow};
+                
                 
             end
 

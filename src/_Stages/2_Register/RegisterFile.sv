@@ -31,7 +31,7 @@ module registerFile #(
 
     generate
         for (i = 1; i < REGISTER_COUNT; i++) begin
-            flopRE #(.WIDTH(`BIT_COUNT)) flop(.clk, .reset, 
+            flopRE #(.WIDTH(`BIT_COUNT)) flop(.clk(~clk), .reset, 
                 .en(WriteEn && rd1Adr == i[REGISTER_SELECTION_WIDTH-1 : 0]), 
                 .D(Rd1), .Q(register_values[i]));
         end

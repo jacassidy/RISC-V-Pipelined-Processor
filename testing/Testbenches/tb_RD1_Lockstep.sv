@@ -16,13 +16,25 @@ module RD1_Lockstep_TestBench();
 	// localparam BIT_COUNT 		= 32;
 
 	//Full RV64I chronological test
+	// localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";
+	// localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv64i_chronological.hex";
+	// localparam BIT_COUNT 			= 64;
+
+	//Full Pipelined RV32I chronological test
+	// localparam inputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex"; 
+	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_pipelined_rv32i_chronological.hex"; 
+	// localparam BIT_COUNT 		= 32;
+
+	//Full Pipelined RV64I chronological test
 	localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";
-	localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv64i_chronological.hex";
+	localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_pipelined_rv64i_chronological.hex";
 	localparam BIT_COUNT 			= 64;
 
 	logic clk, reset;
 	logic result;
 	logic [31:0] vector_num, errors;
+	logic[`BIT_COUNT-1:0] ExpectedRd1;
+	integer line_count = 0;
 	
 	//localvariables
 	// localparam inputVectorSize = (3 + bitCount * 2);
@@ -33,7 +45,7 @@ module RD1_Lockstep_TestBench();
 	
 	//input and output vectors to be assigned and compared to inputs and outputs respectively
 	// logic [inputVectorSize-1:0] inputTestvectors[10000:0];
-	logic [outputVectorSize-1:0] outputTestvectors[50:0];
+	logic [outputVectorSize-1:0] outputTestvectors[10000:0];
 	
 	// generate clock
 	always begin
@@ -58,15 +70,17 @@ module RD1_Lockstep_TestBench();
 	always @(negedge clk)
 		if (~reset) begin // skip during reset
 
+			ExpectedRd1 = outputTestvectors[vector_num];
+
 			//No more instructions
-			if (dut.InstructionMemory.MemData === 'x) begin
+			if (vector_num == line_count) begin
 				$display("Total test cases %d", vector_num);
 				$display("Total errors %d", errors);
 				$stop;
 			end
 
 			//Check if correct result was computed
-			if(dut.ComputeCore.RegisterFile.Rd1 === outputTestvectors[vector_num]) begin
+			if(dut.ComputeCore.RegisterFile.Rd1 === ExpectedRd1) begin
 				result = 1'b1;
 			end else begin
 				if (outputTestvectors[vector_num] === 'x) begin
@@ -81,5 +95,26 @@ module RD1_Lockstep_TestBench();
 			vector_num = vector_num + 1;
 		
 		end	
-		
+
+	integer fd;
+	integer r;
+	reg [1023:0] line;  // Buffer for reading one line at a time
+
+	initial begin
+		fd = $fopen(outputFileName, "r");
+		if (fd == 0) begin
+			$display("ERROR: Could not open file.");
+			$finish;
+		end
+
+		// Read until end-of-file
+		while (!$feof(fd)) begin
+			// $fgets returns 0 on error or end-of-file
+			r = $fgets(line, fd);
+			if (r != 0)
+				line_count++;
+		end
+		$fclose(fd);
+	end
+			
 endmodule

@@ -42,7 +42,7 @@ package HighLevelControl;
         Imm     = 1'b1
     } aluSrcB;
 
-    typedef enum logic[3:0] {
+    typedef enum logic[3:0] { //make sure 0 operation cant turn operands 0 and 0 into anything else
         ADD,
         SUB,
         OR,
@@ -91,18 +91,18 @@ package HighLevelControl;
         NO_TRUNC
     } truncSrc;
 
-    `ifdef BIT_COUNT_64
+    `ifdef PIPELINED
 
         typedef enum logic[1:0] {
             Rs1_NO_FORWARD,
-            Rs1_COMPUTE,
-            Rs1_MEMORY
+            Rs1_COMPUTE_RESULT,
+            Rs1_TRUNCATED_RESULT
         } rs1ForwardSrc;
 
         typedef enum logic[1:0] {
             Rs2_NO_FORWARD,
-            Rs2_COMPUTE,
-            Rs2_MEMORY
+            Rs2_COMPUTE_RESULT,
+            Rs2_TRUNCATED_RESULT
         } rs2ForwardSrc;
 
     `endif

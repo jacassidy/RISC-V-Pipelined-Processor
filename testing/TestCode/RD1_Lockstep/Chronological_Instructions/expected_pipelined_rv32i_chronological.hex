@@ -1,0 +1,35 @@
+xxxxxxxx
+xxxxxxxx
+xxxxxxxx
+xxxxxxxx    //5 stage pipeline
+FFFFF000    //lui
+FFFFEDEF    //addi
+xxxxxxxx    //sw
+xxxxxxxx    //sh
+xxxxxxxx    //sb
+FFFFEDEF    //lw
+0000EDEF    //lhu
+000000EF    //lbu
+FFFFEDEF    //lh
+FFFFFFEF    //lb
+FEEDF028    //auipc
+00000000    //sltiu
+00000001    //slti
+00000054    //xori
+000000FE    //ori
+000000FE    //andi
+000001FC    //add
+00000000    //sub
+FFFFDBDE    //sll   
+7FFFF6F7    //srl
+FFFFF6F7    //sra
+00000001    //slt
+00000000    //sltu
+00002d29    //xor
+FFFFFFFF    //or
+FFFFD2D6    //and
+xxxxxxxx    //fence
+80000000    //slli
+00000001    //srli
+FFFFFFFF    //srai
+xxxxxxxx    //nop

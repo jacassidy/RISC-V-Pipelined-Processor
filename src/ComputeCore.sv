@@ -106,16 +106,22 @@ module computeCore #(
     HighLevelControl::truncSrc          TruncSrc_W;
 
                         ////****HAZZARDS****////
-    HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc;
-    HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc;
+    `ifdef PIPELINED                    
+        HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc;
+        HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc;
 
-    logic                               FlushIR, FlushRC, FlushCM;
-    logic                               StallPC, StallIR, StallRC;
+        logic                               FlushIR, FlushRC, FlushCM;
+        logic                               StallPC, StallIR, StallRC;
+    `endif
 
     ////                        **** I STAGE ****                       ////
 
     //Program Counter
-    flopRS #(.WIDTH(`BIT_COUNT)) ProgramCounter(.clk, .reset, .stall(StallPC), .D(PCNext_I), .Q(PC_I));
+    `ifdef PIPELINED
+        flopRS #(.WIDTH(`BIT_COUNT)) ProgramCounter(.clk, .reset, .stall(StallPC), .D(PCNext_I), .Q(PC_I));
+    `else
+        flopR #(.WIDTH(`BIT_COUNT)) ProgramCounter(.clk, .reset, .D(PCNext_I), .Q(PC_I));
+    `endif 
 
     assign PCp4_I       = PC_I + 4;
 
@@ -174,6 +180,8 @@ module computeCore #(
         endcase
     end
 
+    assign AluOperandBForwardEn_R = AluSrcB_R == HighLevelControl::Rs2;
+
     //Immediate Extender
     immediateExtender ImmediateExtender(.ImmSrc(ImmSrc_R), .Instr(Instr_R), .Imm(Imm_R));
 
@@ -195,20 +203,20 @@ module computeCore #(
     `ifdef PIPELINED
 
         //Data
-        flopRS #(.WIDTH(`BIT_COUNT * 3 + 3 * $clog2(`WORD_SIZE))) DataFlopRC(.clk, .reset, .stall(StallRC),
+        flopRS #(.WIDTH(`BIT_COUNT * 3 + $clog2(`WORD_SIZE))) DataFlopRC(.clk, .reset, .stall(StallRC),
                 .D({AluOperandA_R, AluOperandB_R, Misc_R, rd1Adr_R}), 
                 .Q({AluOperandA_C, AluOperandB_C, Misc_C, rd1Adr_C})
             );
 
         //Signals
         flopRS #(.WIDTH(
-            $bits({PCSrc_R, ConditionalPCSrc_R AluOperandBForwardEn_R, AluOperation_R,
+            $bits({PCSrc_R, ConditionalPCSrc_R, AluOperandBForwardEn_R, AluOperation_R,
                     ComputeSrc_R, ResultSrc_R, TruncSrc_R})
         )) SignalFlopRC(.clk, .reset, .stall(StallRC),
                 .D({PCSrc_R, ConditionalPCSrc_R, AluOperandBForwardEn_R, AluOperation_R,
                     ComputeSrc_R, ResultSrc_R, TruncSrc_R}), 
                 .Q({PCSrc_C, ConditionalPCSrc_C, AluOperandBForwardEn_C, AluOperation_C,
-                    ComputeSrc_C,  ResultSrc_C, TruncSrc_C})
+                    ComputeSrc_C, ResultSrc_C, TruncSrc_C})
             );
 
         //Archetectural Signals
@@ -250,11 +258,11 @@ module computeCore #(
         always_comb begin
             
             casex(Rs1ForwardSrc)
-                HighLevelControl::Rs1_NO_FORWARD:   AluHazzardSafeOperandA_C = AluOperandA_C;
-                HighLevelControl::Rs1_COMPUTE:      AluHazzardSafeOperandA_C = ComputeResult_M;
-                HighLevelControl::Rs1_MEMORY:       AluHazzardSafeOperandA_C = Rd1_W;
+                HighLevelControl::Rs1_NO_FORWARD:       AluHazzardSafeOperandA_C = AluOperandA_C;
+                HighLevelControl::Rs1_COMPUTE_RESULT:   AluHazzardSafeOperandA_C = ComputeResult_M;
+                HighLevelControl::Rs1_TRUNCATED_RESULT: AluHazzardSafeOperandA_C = Rd1_W;
 
-                default:                            AluHazzardSafeOperandA_C = 'x;
+                default:                                AluHazzardSafeOperandA_C = 'x;
             endcase
 
         end
@@ -265,11 +273,11 @@ module computeCore #(
 
             if(AluOperandBForwardEn_C) begin
                 casex(Rs2ForwardSrc)
-                    HighLevelControl::Rs2_NO_FORWARD:   AluHazzardSafeOperandB_C = AluOperandB_C;
-                    HighLevelControl::Rs2_COMPUTE:      AluHazzardSafeOperandB_C = ComputeResult_M;
-                    HighLevelControl::Rs2_MEMORY:       AluHazzardSafeOperandB_C = Rd1_W;
+                    HighLevelControl::Rs2_NO_FORWARD:       AluHazzardSafeOperandB_C = AluOperandB_C;
+                    HighLevelControl::Rs2_COMPUTE_RESULT:   AluHazzardSafeOperandB_C = ComputeResult_M;
+                    HighLevelControl::Rs2_TRUNCATED_RESULT: AluHazzardSafeOperandB_C = Rd1_W;
 
-                    default:                            AluHazzardSafeOperandB_C = 'x;
+                    default:                                AluHazzardSafeOperandB_C = 'x;
                 endcase
             end
         end 
@@ -308,11 +316,11 @@ module computeCore #(
         always_comb begin
             
             casex(Rs2ForwardSrc)
-                HighLevelControl::Rs2_NO_FORWARD:   MemWriteData_C = Misc_C;
-                HighLevelControl::Rs2_COMPUTE:      MemWriteData_C = ComputeResult_M;
-                HighLevelControl::Rs2_MEMORY:       MemWriteData_C = Rd1_W;
+                HighLevelControl::Rs2_NO_FORWARD:       MemWriteData_C = Misc_C;
+                HighLevelControl::Rs2_COMPUTE_RESULT:   MemWriteData_C = ComputeResult_M;
+                HighLevelControl::Rs2_TRUNCATED_RESULT: MemWriteData_C = Rd1_W;
 
-                default:                            MemWriteData_C = 'x;
+                default:                                MemWriteData_C = 'x;
             endcase
 
         end
@@ -409,6 +417,7 @@ module computeCore #(
 
         //Signals
         assign RegWrite_W       = RegWrite_M;
+        assign ResultSrc_W      = ResultSrc_M;
         assign TruncSrc_W       = TruncSrc_M;
 
     `endif
@@ -425,35 +434,36 @@ module computeCore #(
         endcase
     end
 
+
     //Write Result to Register
-    truncator Truncator(.TruncSrc(TruncSrc_W), .Input(Result_M), .TruncResult(Rd1_W));
+    truncator Truncator(.TruncSrc(TruncSrc_W), .Input(Result_W), .TruncResult(Rd1_W));
 
     ////                        **** HAZZARDS ****                       ////
     logic PredictionCorrect_C;
     
     `ifdef PIPELINED
         //Prediction is only ever correct when there was a branch and it is not taken
-        assign PredictionCorrect_C = PCSrcPostConditional_C != Branch_C && ConditionalPCSrc_C != HighLevelControl::NO_BRANCH;
+        assign PredictionCorrect_C = PCSrcPostConditional_C != HighLevelControl::Branch_C && ConditionalPCSrc_C != HighLevelControl::NO_BRANCH;
 
-        hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .MemEn_C, .RegWrite_C, 
+        hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .rd1Adr_M, .MemEn_C, .RegWrite_C, .RegWrite_M, 
                                 .Rs1ForwardSrc, .Rs2ForwardSrc, .FlushCM, .StallPC, .StallIR, .StallRC);
 
     `else
         assign PredictionCorrect_C  = 1'b0;
 
-        assign Rs1ForwardSrc        = HighLevelControl::Rs1_NO_FORWARD;
-        assign Rs2ForwardSrc        = HighLevelControl::Rs2_NO_FORWARD;
+        // assign Rs1ForwardSrc        = HighLevelControl::Rs1_NO_FORWARD;
+        // assign Rs2ForwardSrc        = HighLevelControl::Rs2_NO_FORWARD;
 
-        assign FlushCM              = 1'b0;
-        assign StallPC              = 1'b0;
-        assign StallIR              = 1'b0;
-        assign StallRC              = 1'b0;
+        // assign FlushCM              = 1'b0;
+        // assign StallPC              = 1'b0;
+        // assign StallIR              = 1'b0;
+        // assign StallRC              = 1'b0;
     `endif
 
     //PC Source Select Mux implemented with branch prediction
     pcUpdateHandler PCUpdateHandler(.PCSrc_R(PCSrc_R), 
-            .PCSrcPostConditional_C, .PredictionCorrect_R(1'b0), .PredictionCorrect_C, .PCp4_I, 
-            .AluAdd_C(AluResult_C), .PCpImm_R, .UpdatedPC_C(Misc_C), .PCNext_I
+            .PCSrcPostConditional_C, .Predict(1'b0), .Prediction(`BIT_COUNT'b0), .PredictionCorrect_R(1'b0), 
+            .PredictionCorrect_C, .PCp4_I, .AluAdd_C(AluResult_C), .PCpImm_R, .UpdatedPC_C(Misc_C), .PCNext_I
             
             `ifdef PIPELINED
                 , .FlushIR, .FlushRC
@@ -461,6 +471,34 @@ module computeCore #(
             
             );
 
-    
-    
+    `ifdef DEBUGGING
+
+        logic[$clog2(`WORD_SIZE)-1:0]   rs1Adr_C, rs2Adr_C;
+        logic[`BIT_COUNT-1:0]           Rs1_C, Rs2_C, Imm_C;
+
+        logic[$clog2(`WORD_SIZE)-1:0]   rs1Adr_M, rs2Adr_M;
+        logic[`BIT_COUNT-1:0]           Rs1_M, Rs2_M, Imm_M, AluHazzardSafeOperandA_M, AluHazzardSafeOperandB_M;
+        HighLevelControl::aluOperation  AluOperation_M;
+
+        logic[$clog2(`WORD_SIZE)-1:0]   rs1Adr_W, rs2Adr_W;
+        logic[`BIT_COUNT-1:0]           Rs1_W, Rs2_W, Imm_W, AluHazzardSafeOperandA_W, AluHazzardSafeOperandB_W, MemWriteData_W;
+        HighLevelControl::aluOperation  AluOperation_W;
+
+        flopR #(`BIT_COUNT * 3 + $clog2(`WORD_SIZE) * 2) DebugFlopRC (.clk, .reset,
+            .D({rs1Adr_R, rs2Adr_R, Rs1_R, Rs2_R, Imm_R}),
+            .Q({rs1Adr_C, rs2Adr_C, Rs1_C, Rs2_C, Imm_C})
+            );
+
+        flopR #(`BIT_COUNT * 5 + $clog2(`WORD_SIZE) * 2 + $bits(AluOperation_M)) DebugFlopCM (.clk, .reset,
+            .D({rs1Adr_C, rs2Adr_C, Rs1_C, Rs2_C, Imm_C, AluHazzardSafeOperandA_C, AluHazzardSafeOperandB_C, AluOperation_C}),
+            .Q({rs1Adr_M, rs2Adr_M, Rs1_M, Rs2_M, Imm_M, AluHazzardSafeOperandA_M, AluHazzardSafeOperandB_M, AluOperation_M})
+            );
+            
+        flopR #(`BIT_COUNT * 6 + $clog2(`WORD_SIZE) * 2 + $bits(AluOperation_W)) DebugFlopMW (.clk, .reset,
+            .D({rs1Adr_M, rs2Adr_M, Rs1_M, Rs2_M, Imm_M, AluHazzardSafeOperandA_M, AluHazzardSafeOperandB_M, MemWriteData_M, AluOperation_M}),
+            .Q({rs1Adr_W, rs2Adr_W, Rs1_W, Rs2_W, Imm_W, AluHazzardSafeOperandA_W, AluHazzardSafeOperandB_W, MemWriteData_W, AluOperation_W})
+            );
+
+    `endif
+
 endmodule
