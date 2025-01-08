@@ -7,6 +7,6 @@
 
     `define BIT_COUNT_64        //Used to enable 64 bit mode
     `define PIPELINED           //Used to enable pipelining
-    // `define DEBUGGING
+    `define DEBUGGING
 
 // `endif // PARAMETERS

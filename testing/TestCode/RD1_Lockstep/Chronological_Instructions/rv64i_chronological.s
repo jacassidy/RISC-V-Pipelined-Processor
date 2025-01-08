@@ -40,23 +40,28 @@ _start:
     srai x1, x16, 36    # 34) srai x1, x1, imm
 
     #setup for w tests
-    slli x3, x2, 36
-    or   x5, x2, x3
+    slli x3, x2, 36     #35
+    or   x5, x2, x3     #36
 
     #32 Bit instructions
-    addiw x1, x5, 0x7FF         #FFFFF6F00FFFFF6F 
-    subw  x1, x5, x1            #FFFFF6F00FFFFF6F - 000000001000076E
-    slliw x1, x5, 16
-    srliw x1, x5, 16
-    sraiw x1, x5, 16
-    sraiw x1, x19, 4
+    addiw x1, x5, 0x7FF         #FFFFF6F00FFFFF6F                           #37
+    subw  x1, x5, x1            #FFFFF6F00FFFFF6F - 000000001000076E        #38
+    slliw x1, x5, 16        #39
+    srliw x1, x5, 16        #40
+    sraiw x1, x5, 16        #41
+    sraiw x1, x19, 4        #42
 
-    sd  x5, 0xc(x0)
-    ld  x1, 0xc(x0)
-    lwu x1, 0(x0)
+    sd  x5, 0xc(x0)         #43
+    ld  x1, 0xc(x0)         #44
+    lwu x1, 0(x0)           #45
 
-    addi x2, x1, 1
-    addi x1, x1, 1
+    addi x2, x1, 1          #46
+    addi x1, x1, 1          #47
+
+    addi x1, x0, 0xA        #48
+    lw   x2, 0(x0)          #49
+    sub  x1, x2, x1         #50
+
 
     # addw
     # sllw

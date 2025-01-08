@@ -95,14 +95,16 @@ package HighLevelControl;
 
         typedef enum logic[1:0] {
             Rs1_NO_FORWARD,
-            Rs1_COMPUTE_RESULT,
-            Rs1_TRUNCATED_RESULT
+            Rs1_ComputeResult,
+            Rs1_Rd1W,
+            Rs1_Rd1PostW
         } rs1ForwardSrc;
 
         typedef enum logic[1:0] {
             Rs2_NO_FORWARD,
-            Rs2_COMPUTE_RESULT,
-            Rs2_TRUNCATED_RESULT
+            Rs2_ComputeResult,
+            Rs2_Rd1W,
+            Rs2_Rd1PostW
         } rs2ForwardSrc;
 
     `endif

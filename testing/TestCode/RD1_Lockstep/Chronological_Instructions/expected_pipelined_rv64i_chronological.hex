@@ -52,3 +52,7 @@ FFFFF6F00FFFFF6F    //ld
 xxxxxxxxxxxxxxxx    //stall
 00000000FFFFEDF0    //addi
 00000000FFFFEDF0    //addi
+000000000000000A    //addi
+FFFFFFFFFFFFEDEF    //lw
+xxxxxxxxxxxxxxxx    //stall
+FFFFFFFFFFFFEDE5    //sub

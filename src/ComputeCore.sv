@@ -107,11 +107,14 @@ module computeCore #(
 
                         ////****HAZZARDS****////
     `ifdef PIPELINED                    
-        HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc;
-        HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc;
+        HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc_C;
+        HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc_C;
 
         logic                               FlushIR, FlushRC, FlushCM;
         logic                               StallPC, StallIR, StallRC;
+
+        logic                               LoadAfterForward_C;
+        logic[`BIT_COUNT-1:0]               Rd1_PostW;
     `endif
 
     ////                        **** I STAGE ****                       ////
@@ -257,10 +260,11 @@ module computeCore #(
         //Forward Muxes
         always_comb begin
             
-            casex(Rs1ForwardSrc)
+            casex(Rs1ForwardSrc_C)
                 HighLevelControl::Rs1_NO_FORWARD:       AluHazzardSafeOperandA_C = AluOperandA_C;
-                HighLevelControl::Rs1_COMPUTE_RESULT:   AluHazzardSafeOperandA_C = ComputeResult_M;
-                HighLevelControl::Rs1_TRUNCATED_RESULT: AluHazzardSafeOperandA_C = Rd1_W;
+                HighLevelControl::Rs1_ComputeResult:    AluHazzardSafeOperandA_C = ComputeResult_M;
+                HighLevelControl::Rs1_Rd1W:             AluHazzardSafeOperandA_C = Rd1_W;
+                HighLevelControl::Rs1_Rd1PostW:         AluHazzardSafeOperandA_C = Rd1_PostW;
 
                 default:                                AluHazzardSafeOperandA_C = 'x;
             endcase
@@ -272,10 +276,11 @@ module computeCore #(
             AluHazzardSafeOperandB_C = AluOperandB_C;
 
             if(AluOperandBForwardEn_C) begin
-                casex(Rs2ForwardSrc)
+                casex(Rs2ForwardSrc_C)
                     HighLevelControl::Rs2_NO_FORWARD:       AluHazzardSafeOperandB_C = AluOperandB_C;
-                    HighLevelControl::Rs2_COMPUTE_RESULT:   AluHazzardSafeOperandB_C = ComputeResult_M;
-                    HighLevelControl::Rs2_TRUNCATED_RESULT: AluHazzardSafeOperandB_C = Rd1_W;
+                    HighLevelControl::Rs2_ComputeResult:    AluHazzardSafeOperandB_C = ComputeResult_M;
+                    HighLevelControl::Rs2_Rd1W:             AluHazzardSafeOperandB_C = Rd1_W;
+                    HighLevelControl::Rs2_Rd1PostW:         AluHazzardSafeOperandB_C = Rd1_PostW;
 
                     default:                                AluHazzardSafeOperandB_C = 'x;
                 endcase
@@ -300,7 +305,7 @@ module computeCore #(
     always_comb begin
         casex(ComputeSrc_C)
             HighLevelControl::ALU:          ComputeResult_C = AluResult_C;
-            HighLevelControl::Passthrough:         ComputeResult_C = Passthrough_C;
+            HighLevelControl::Passthrough:  ComputeResult_C = Passthrough_C;
 
             default:                        ComputeResult_C = 'x;
 
@@ -315,10 +320,11 @@ module computeCore #(
         //Forward Mux
         always_comb begin
             
-            casex(Rs2ForwardSrc)
+            casex(Rs2ForwardSrc_C)
                 HighLevelControl::Rs2_NO_FORWARD:       MemWriteData_C = Passthrough_C;
-                HighLevelControl::Rs2_COMPUTE_RESULT:   MemWriteData_C = ComputeResult_M;
-                HighLevelControl::Rs2_TRUNCATED_RESULT: MemWriteData_C = Rd1_W;
+                HighLevelControl::Rs2_ComputeResult:    MemWriteData_C = ComputeResult_M;
+                HighLevelControl::Rs2_Rd1W:             MemWriteData_C = Rd1_W;
+                HighLevelControl::Rs2_Rd1PostW:         MemWriteData_C = Rd1_PostW;
 
                 default:                                MemWriteData_C = 'x;
             endcase
@@ -446,13 +452,17 @@ module computeCore #(
         assign PredictionCorrect_C = PCSrcPostConditional_C != HighLevelControl::Branch_C && ConditionalPCSrc_C != HighLevelControl::NO_BRANCH;
 
         hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .rd1Adr_M, .MemEn_C, .RegWrite_C, .RegWrite_M, 
-                                .Rs1ForwardSrc, .Rs2ForwardSrc, .FlushCM, .StallPC, .StallIR, .StallRC);
+                                .Rs1ForwardSrc_C, .Rs2ForwardSrc_C, .FlushCM, .StallPC, .StallIR, .StallRC);
 
+        flopR #(.WIDTH(`BIT_COUNT)) LoadAfterForwardFlop(.clk, .reset,
+                .D(Rd1_W),
+                .Q(Rd1_PostW)
+            );
     `else
         assign PredictionCorrect_C  = 1'b0;
 
-        // assign Rs1ForwardSrc        = HighLevelControl::Rs1_NO_FORWARD;
-        // assign Rs2ForwardSrc        = HighLevelControl::Rs2_NO_FORWARD;
+        // assign Rs1ForwardSrc_C        = HighLevelControl::Rs1_NO_FORWARD;
+        // assign Rs2ForwardSrc_C        = HighLevelControl::Rs2_NO_FORWARD;
 
         // assign FlushCM              = 1'b0;
         // assign StallPC              = 1'b0;
