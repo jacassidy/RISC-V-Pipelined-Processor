@@ -121,9 +121,9 @@ module computeCore #(
 
     //Program Counter
     `ifdef PIPELINED
-        flopRS #(.WIDTH(`BIT_COUNT)) ProgramCounter(.clk, .reset, .stall(StallPC), .D(PCNext_I), .Q(PC_I));
+        flopRS #(.WIDTH(`BIT_COUNT), .DEFAULT(`BIT_COUNT'h8000_0000)) ProgramCounter(.clk, .reset, .stall(StallPC), .D(PCNext_I), .Q(PC_I));
     `else
-        flopR #(.WIDTH(`BIT_COUNT)) ProgramCounter(.clk, .reset, .D(PCNext_I), .Q(PC_I));
+        flopR #(.WIDTH(`BIT_COUNT), .DEFAULT(`BIT_COUNT'h8000_0000)) ProgramCounter(.clk, .reset, .D(PCNext_I), .Q(PC_I));
     `endif 
 
     assign PCp4_I       = PC_I + 4;

@@ -1,7 +1,8 @@
 //James Kaden Cassidy jkc.cassidy@gmail.com 12/19/2024
 
 module flopR #(
-    WIDTH = 32
+    WIDTH   = 32,
+    DEFAULT = 0
 ) (
     input   logic               clk,
     input   logic               reset,
@@ -11,14 +12,15 @@ module flopR #(
 );
 
     always_ff @( posedge clk ) begin 
-        if (reset)  Q <= 0;
+        if (reset)  Q <= DEFAULT;
         else        Q <= D;
     end
     
 endmodule
 
 module flopRE #(
-    WIDTH = 32
+    WIDTH   = 32,
+    DEFAULT = 0
 ) (
     input   logic               clk,
     input   logic               reset,
@@ -29,14 +31,15 @@ module flopRE #(
 );
 
     always_ff @( posedge clk ) begin 
-        if (reset)      Q <= 0;
+        if (reset)      Q <= DEFAULT;
         else if (en)    Q <= D;
     end
 
 endmodule
 
 module flopRS #(
-    WIDTH = 32
+    WIDTH   = 32,
+    DEFAULT = 0
 ) (
     input   logic               clk,
     input   logic               reset,
@@ -47,14 +50,15 @@ module flopRS #(
 );
 
     always_ff @( posedge clk ) begin 
-        if (reset)      Q <= 0;
+        if (reset)          Q <= DEFAULT;
         else if (~stall)    Q <= D;
     end
 
 endmodule
 
 module flopRF #(
-    WIDTH = 32
+    WIDTH   = 32,
+    DEFAULT = 0
 ) (
     input   logic               clk,
     input   logic               reset,
@@ -65,14 +69,15 @@ module flopRF #(
 );
 
     always_ff @( posedge clk ) begin 
-        if (reset | flush)  Q <= 0;
+        if (reset | flush)  Q <= DEFAULT;
         else                Q <= D;
     end
 
 endmodule
 
 module flopRFS #(
-    WIDTH = 32
+    WIDTH   = 32,
+    DEFAULT = 0
 ) (
     input   logic               clk,
     input   logic               reset,
@@ -84,7 +89,7 @@ module flopRFS #(
 );
 
     always_ff @( posedge clk ) begin 
-        if (reset | flush)  Q <= 0;
+        if (reset | flush)  Q <= DEFAULT;
         else if (~stall)    Q <= D;
     end
 

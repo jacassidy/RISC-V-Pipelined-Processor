@@ -14,7 +14,7 @@ typedef struct packed {
     HighLevelControl::conditionalPCSrc      ConditionalPCSrc;
 
     HighLevelControl::immSrc                ImmSrc;
-    HighLevelControl::passthroughSrc               PassthroughSrc;
+    HighLevelControl::passthroughSrc        PassthroughSrc;
 
     HighLevelControl::aluSrcB               AluSrcB;
     HighLevelControl::aluOperation          AluOperation;
@@ -56,7 +56,7 @@ module controller #(
     output logic                                RegWrite_R,
 
     output HighLevelControl::immSrc             ImmSrc_R,
-    output HighLevelControl::passthroughSrc            PassthroughSrc_R,
+    output HighLevelControl::passthroughSrc     PassthroughSrc_R,
 
     output HighLevelControl::aluSrcB            AluSrcB_R,
     output HighLevelControl::aluOperation       AluOperation_R,
@@ -91,7 +91,7 @@ module controller #(
     assign ConditionalPCSrc_R                                       = Controller.ConditionalPCSrc;
 
     assign ImmSrc_R                                                 = Controller.ImmSrc;
-    assign PassthroughSrc_R                                                = Controller.PassthroughSrc;
+    assign PassthroughSrc_R                                         = Controller.PassthroughSrc;
 
     assign AluSrcB_R                                                = Controller.AluSrcB;
     assign AluOperation_R                                           = Controller.AluOperation;
@@ -130,7 +130,13 @@ module controller #(
                 7'b0011011: Controller  = IWType;
             `endif 
 
-            default: setControllerX(Controller);
+            default: begin // instruction not supported
+                setControllerX(Controller);
+                // if (Instr_R !== 'x && Instr_R !== 0) begin
+                //     $display("Instruction not implemented: Machine Code (%h)", Instr_R);
+                //     $finish(-1);
+                // end
+            end
                         
         endcase
     end
