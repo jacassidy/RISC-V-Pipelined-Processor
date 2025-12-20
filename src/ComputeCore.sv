@@ -21,7 +21,7 @@ module computeCore #(
     input   logic[`BIT_COUNT-1:0]       External_MemReadData
 );
 
-    
+
 
                         ////****I Stage****////
     logic[`BIT_COUNT-1:0]               PCNext_I, PCp4_I, PC_I;
@@ -36,7 +36,7 @@ module computeCore #(
     //Controller Signals
     HighLevelControl::immSrc            ImmSrc_R;
     HighLevelControl::aluSrcB           AluSrcB_R;
-    HighLevelControl::passthroughSrc           PassthroughSrc_R;
+    HighLevelControl::passthroughSrc    PassthroughSrc_R;
     HighLevelControl::pcSrc             PCSrc_R;
 
     //C
@@ -50,7 +50,7 @@ module computeCore #(
     //M
     logic                               MemEn_R, MemWriteEn_R;
     logic[(`BIT_COUNT/8)-1:0]           MemByteEn_R;
-    
+
     //W
     logic                               RegWrite_R;
     HighLevelControl::resultSrc         ResultSrc_R;
@@ -97,7 +97,7 @@ module computeCore #(
     HighLevelControl::truncSrc          TruncSrc_M;
 
                         ////****W Stage****////
-    logic[`BIT_COUNT-1:0]               Rd1_W, Result_W, ComputeResult_W, MemReadData_W;  
+    logic[`BIT_COUNT-1:0]               Rd1_W, Result_W, ComputeResult_W, MemReadData_W;
     logic[$clog2(`WORD_SIZE)-1:0]       rd1Adr_W;
 
     //Controller Signals
@@ -106,7 +106,7 @@ module computeCore #(
     HighLevelControl::truncSrc          TruncSrc_W;
 
                         ////****HAZZARDS****////
-    `ifdef PIPELINED                    
+    `ifdef PIPELINED
         HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc_C;
         HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc_C;
 
@@ -119,12 +119,25 @@ module computeCore #(
 
     ////                        **** I STAGE ****                       ////
 
+    logic [`BIT_COUNT-1:0] PROGRAM_ENTRY_ADR;
+    initial begin
+        PROGRAM_ENTRY_ADR = '0; // default
+        void'($value$plusargs("ENTRY_ADDR=%h", PROGRAM_ENTRY_ADR)); // override if provided
+        $display("[TB] ENTRY_ADDR = 0x%h", PROGRAM_ENTRY_ADR);
+    end
+
     //Program Counter
     `ifdef PIPELINED
-        flopRS #(.WIDTH(`BIT_COUNT), .DEFAULT(`BIT_COUNT'h8000_0000)) ProgramCounter(.clk, .reset, .stall(StallPC), .D(PCNext_I), .Q(PC_I));
+        always_ff @( posedge clk ) begin
+            if (reset)          PC_I <= PROGRAM_ENTRY_ADR;
+            else if (~StallPC)  PC_I <= PCNext_I;
+        end
     `else
-        flopR #(.WIDTH(`BIT_COUNT), .DEFAULT(`BIT_COUNT'h8000_0000)) ProgramCounter(.clk, .reset, .D(PCNext_I), .Q(PC_I));
-    `endif 
+        always_ff @( posedge clk ) begin
+            if (reset)  PC_I <= PROGRAM_ENTRY_ADR;
+            else        PC_I <= PCNext_I;
+        end
+    `endif
 
     assign PCp4_I       = PC_I + 4;
 
@@ -137,13 +150,13 @@ module computeCore #(
 
         //Data
         flopRS #(.WIDTH(`BIT_COUNT * 2)) DataFlopIR(.clk, .reset, .stall(StallIR),
-                .D({PC_I, PCp4_I}), 
+                .D({PC_I, PCp4_I}),
                 .Q({PC_R, PCp4_R})
             );
 
         //Flush instruction to all zeros to flush
         flopRFS #(.WIDTH(`WORD_SIZE)) InstructionFlopIR(.clk, .reset, .flush(FlushIR), .stall(StallIR),
-                .D({Instr_I}), 
+                .D({Instr_I}),
                 .Q({Instr_R})
             );
 
@@ -162,15 +175,15 @@ module computeCore #(
 
     //Controller
     controller Controller(.Instr_R,
-        .PCSrc_R, .ConditionalPCSrc_R, .RegWrite_R, .ImmSrc_R, .PassthroughSrc_R, .AluSrcB_R, 
+        .PCSrc_R, .ConditionalPCSrc_R, .RegWrite_R, .ImmSrc_R, .PassthroughSrc_R, .AluSrcB_R,
         .AluOperation_R, .ComputeSrc_R, .MemEn_R, .MemWriteEn_R, .MemByteEn_R, .ResultSrc_R, .TruncSrc_R);
 
     //Register File
     registerFile #(.REGISTER_COUNT(`WORD_SIZE)) RegisterFile(
-        .clk, .reset, .WriteEn(RegWrite_W), .rs1Adr(rs1Adr_R), .rs2Adr(rs2Adr_R), 
+        .clk, .reset, .WriteEn(RegWrite_W), .rs1Adr(rs1Adr_R), .rs2Adr(rs2Adr_R),
         .rd1Adr(rd1Adr_W), .Rd1(Rd1_W), .Rs1(Rs1_R), .Rs2(Rs2_R)
     );
-    
+
     //ALU Src A Mux
     assign AluOperandA_R = Rs1_R;
 
@@ -207,7 +220,7 @@ module computeCore #(
 
         //Data
         flopRS #(.WIDTH(`BIT_COUNT * 3 + $clog2(`WORD_SIZE))) DataFlopRC(.clk, .reset, .stall(StallRC),
-                .D({AluOperandA_R, AluOperandB_R, Passthrough_R, rd1Adr_R}), 
+                .D({AluOperandA_R, AluOperandB_R, Passthrough_R, rd1Adr_R}),
                 .Q({AluOperandA_C, AluOperandB_C, Passthrough_C, rd1Adr_C})
             );
 
@@ -217,7 +230,7 @@ module computeCore #(
                     ComputeSrc_R, ResultSrc_R, TruncSrc_R})
         )) SignalFlopRC(.clk, .reset, .stall(StallRC),
                 .D({PCSrc_R, ConditionalPCSrc_R, AluOperandBForwardEn_R, AluOperation_R,
-                    ComputeSrc_R, ResultSrc_R, TruncSrc_R}), 
+                    ComputeSrc_R, ResultSrc_R, TruncSrc_R}),
                 .Q({PCSrc_C, ConditionalPCSrc_C, AluOperandBForwardEn_C, AluOperation_C,
                     ComputeSrc_C, ResultSrc_C, TruncSrc_C})
             );
@@ -226,10 +239,10 @@ module computeCore #(
         flopRFS #(.WIDTH(
             $bits({MemEn_R, MemWriteEn_R, MemByteEn_R, RegWrite_R})
         )) ArchetecturalSignalFlopRC(.clk, .reset, .stall(StallRC), .flush(FlushRC),
-                .D({MemEn_R, MemWriteEn_R, MemByteEn_R, RegWrite_R}), 
+                .D({MemEn_R, MemWriteEn_R, MemByteEn_R, RegWrite_R}),
                 .Q({MemEn_C, MemWriteEn_C, MemByteEn_C, RegWrite_C})
             );
-            
+
     `else
 
         //Data
@@ -259,7 +272,7 @@ module computeCore #(
 
         //Forward Muxes
         always_comb begin
-            
+
             casex(Rs1ForwardSrc_C)
                 HighLevelControl::Rs1_NO_FORWARD:       AluHazzardSafeOperandA_C = AluOperandA_C;
                 HighLevelControl::Rs1_ComputeResult:    AluHazzardSafeOperandA_C = ComputeResult_M;
@@ -285,7 +298,7 @@ module computeCore #(
                     default:                                AluHazzardSafeOperandB_C = 'x;
                 endcase
             end
-        end 
+        end
 
     `else
 
@@ -295,10 +308,10 @@ module computeCore #(
     `endif
 
     //ALU
-    behavioralAlu ALU(.AluOperation(AluOperation_C), .AluOperandA(AluHazzardSafeOperandA_C), .AluOperandB(AluHazzardSafeOperandB_C), 
+    behavioralAlu ALU(.AluOperation(AluOperation_C), .AluOperandA(AluHazzardSafeOperandA_C), .AluOperandB(AluHazzardSafeOperandB_C),
                     .Zero(Zero_C), .oVerflow(oVerflow_C), .Negative(Negative_C), .Carry(Carry_C), .AluResult(AluResult_C));
 
-    branchHandler BranchHandler(.PCSrc_C, .ConditionalPCSrc_C, 
+    branchHandler BranchHandler(.PCSrc_C, .ConditionalPCSrc_C,
             .Zero_C, .Carry_C, .Negative_C, .oVerflow_C, .PCSrcPostConditional_C);
 
     //Compute Result Select Mux
@@ -313,13 +326,13 @@ module computeCore #(
     end
 
     //
-    
+
 
     `ifdef PIPELINED
 
         //Forward Mux
         always_comb begin
-            
+
             casex(Rs2ForwardSrc_C)
                 HighLevelControl::Rs2_NO_FORWARD:       MemWriteData_C = Passthrough_C;
                 HighLevelControl::Rs2_ComputeResult:    MemWriteData_C = ComputeResult_M;
@@ -340,16 +353,16 @@ module computeCore #(
     `ifdef PIPELINED
 
         //Data
-        flopR #(.WIDTH(`BIT_COUNT * 2 + $clog2(`WORD_SIZE))) DataFlopCM(.clk, .reset, 
-                .D({ComputeResult_C, MemWriteData_C, rd1Adr_C}), 
+        flopR #(.WIDTH(`BIT_COUNT * 2 + $clog2(`WORD_SIZE))) DataFlopCM(.clk, .reset,
+                .D({ComputeResult_C, MemWriteData_C, rd1Adr_C}),
                 .Q({ComputeResult_M, MemWriteData_M, rd1Adr_M})
             );
 
         //Signals
         flopR #(.WIDTH(
             $bits({ResultSrc_C, TruncSrc_C})
-        )) SignalFlopCM(.clk, .reset, 
-                .D({ResultSrc_C, TruncSrc_C}), 
+        )) SignalFlopCM(.clk, .reset,
+                .D({ResultSrc_C, TruncSrc_C}),
                 .Q({ResultSrc_M, TruncSrc_M})
         );
 
@@ -357,10 +370,10 @@ module computeCore #(
         flopRF #(.WIDTH(
             $bits({MemEn_C, MemWriteEn_C, MemByteEn_C, RegWrite_C})
         )) ArchetecturalSignalFlopCM(.clk, .reset, .flush(FlushCM),
-                .D({MemEn_C, MemWriteEn_C, MemByteEn_C, RegWrite_C}), 
+                .D({MemEn_C, MemWriteEn_C, MemByteEn_C, RegWrite_C}),
                 .Q({MemEn_M, MemWriteEn_M, MemByteEn_M, RegWrite_M})
         );
-        
+
     `else
 
         //Data
@@ -393,24 +406,24 @@ module computeCore #(
     `ifdef PIPELINED
 
         //Data
-        flopR #(.WIDTH(2 * `BIT_COUNT + $clog2(`WORD_SIZE))) DataFlopMW(.clk, .reset, 
-                .D({ComputeResult_M, MemReadData_M, rd1Adr_M}), 
+        flopR #(.WIDTH(2 * `BIT_COUNT + $clog2(`WORD_SIZE))) DataFlopMW(.clk, .reset,
+                .D({ComputeResult_M, MemReadData_M, rd1Adr_M}),
                 .Q({ComputeResult_W, MemReadData_W, rd1Adr_W})
             );
 
         //Signals
         flopR #(.WIDTH(
             $bits({ResultSrc_M, TruncSrc_M})
-        )) SignalFlopMW(.clk, .reset, 
-                .D({ResultSrc_M, TruncSrc_M}), 
+        )) SignalFlopMW(.clk, .reset,
+                .D({ResultSrc_M, TruncSrc_M}),
                 .Q({ResultSrc_W, TruncSrc_W})
         );
 
         //Archetectural Signals
         flopR #(.WIDTH(
             $bits({RegWrite_M})
-        )) ArchetecturalSignalFlopMW(.clk, .reset, 
-                .D({RegWrite_M}), 
+        )) ArchetecturalSignalFlopMW(.clk, .reset,
+                .D({RegWrite_M}),
                 .Q({RegWrite_W})
         );
 
@@ -433,7 +446,7 @@ module computeCore #(
     //Result Select Mux
     always_comb begin
         casex(ResultSrc_W)
-            HighLevelControl::Memory:   Result_W = MemReadData_W; 
+            HighLevelControl::Memory:   Result_W = MemReadData_W;
             HighLevelControl::Compute:  Result_W = ComputeResult_W;
 
             default:                    Result_W = 'x;
@@ -446,12 +459,12 @@ module computeCore #(
 
     ////                        **** HAZZARDS ****                       ////
     logic PredictionCorrect_C;
-    
+
     `ifdef PIPELINED
         //Prediction is only ever correct when there was a branch and it is not taken
         assign PredictionCorrect_C = PCSrcPostConditional_C != HighLevelControl::Branch_C && ConditionalPCSrc_C != HighLevelControl::NO_BRANCH;
 
-        hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .rd1Adr_M, .MemEn_C, .RegWrite_C, .RegWrite_M, 
+        hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .rd1Adr_M, .MemEn_C, .RegWrite_C, .RegWrite_M,
                                 .Rs1ForwardSrc_C, .Rs2ForwardSrc_C, .FlushCM, .StallPC, .StallIR, .StallRC);
 
         flopR #(.WIDTH(`BIT_COUNT)) LoadAfterForwardFlop(.clk, .reset,
@@ -471,14 +484,14 @@ module computeCore #(
     `endif
 
     //PC Source Select Mux implemented with branch prediction
-    pcUpdateHandler PCUpdateHandler(.PCSrc_R(PCSrc_R), 
-            .PCSrcPostConditional_C, .Predict(1'b0), .Prediction(`BIT_COUNT'b0), .PredictionCorrect_R(1'b0), 
+    pcUpdateHandler PCUpdateHandler(.PCSrc_R(PCSrc_R),
+            .PCSrcPostConditional_C, .Predict(1'b0), .Prediction(`BIT_COUNT'b0), .PredictionCorrect_R(1'b0),
             .PredictionCorrect_C, .PCp4_I, .AluAdd_C(AluResult_C), .PCpImm_R, .UpdatedPC_C(Passthrough_C), .PCNext_I
-            
+
             `ifdef PIPELINED
                 , .FlushIR, .FlushRC
-            `endif 
-            
+            `endif
+
             );
 
     `ifdef DEBUGGING
@@ -503,7 +516,7 @@ module computeCore #(
             .D({rs1Adr_C, rs2Adr_C, Rs1_C, Rs2_C, Imm_C, AluHazzardSafeOperandA_C, AluHazzardSafeOperandB_C, AluOperation_C}),
             .Q({rs1Adr_M, rs2Adr_M, Rs1_M, Rs2_M, Imm_M, AluHazzardSafeOperandA_M, AluHazzardSafeOperandB_M, AluOperation_M})
             );
-            
+
         flopR #(`BIT_COUNT * 6 + $clog2(`WORD_SIZE) * 2 + $bits(AluOperation_W)) DebugFlopMW (.clk, .reset,
             .D({rs1Adr_M, rs2Adr_M, Rs1_M, Rs2_M, Imm_M, AluHazzardSafeOperandA_M, AluHazzardSafeOperandB_M, MemWriteData_M, AluOperation_M}),
             .Q({rs1Adr_W, rs2Adr_W, Rs1_W, Rs2_W, Imm_W, AluHazzardSafeOperandA_W, AluHazzardSafeOperandB_W, MemWriteData_W, AluOperation_W})
