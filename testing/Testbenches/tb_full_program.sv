@@ -6,55 +6,55 @@
 module Full_Program_TestBench();
 
 	localparam inputFileName = "../TestCode/Full_Programs/full_program.hex"; //requires 64 word memory each
-	localparam output_value = `BIT_COUNT'h0f;
+	localparam output_value = `XLEN'h0f;
 
 	logic clk, reset;
 	logic [31:0] vector_num, errors, instuction_number;
-	
+
 	//////////////////////////////////
 	////		Section to Change		////
 	//////////////////////////////////
 
 	//localvariables
 	// localparam inputVectorSize = (3 + bitCount * 2);
-	localparam outputVectorSize = (`BIT_COUNT);
-	
+	localparam outputVectorSize = (`XLEN);
+
 	// instantiate device under test
 	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName)) dut (.clk, .reset);
-	
+
 	//////////////////////////////////
 	////		Section to Change		////
 	//////////////////////////////////
-	
+
 	//input and output vectors to be assigned and compared to inputs and outputs respectively
 	// logic [inputVectorSize-1:0] inputTestvectors[10000:0];
 	// logic [outputVectorSize-1:0] outputTestvectors[50:0];
-	
+
 	// generate clock
 	always begin
 		clk=1; #5; clk=0; #5;
 	end
-		
+
 	// at start of test, load vectors and pulse reset
 	initial begin
 		//Load Files
 		//$readmemb(inputFileName, inputTestvectors);
 		// $readmemh(outputFileName, outputTestvectors);
-		
+
 		//Reset Values
-		vector_num = 1; errors = 0; reset = 1; 
-		
+		vector_num = 1; errors = 0; reset = 1;
+
 		#12; //Wait to reset
-		
+
 		reset = 0; //Begin
 	end
-	
+
 	//////////////////////////////////
 	////		Section to Change		////
 	//////////////////////////////////
 
 	assign instuction_number = (dut.InstrAdr >> 2) + 1;
-		
+
 	// check results on falling edge of clk
 	always @(negedge clk)
 		if (~reset) begin // skip during reset
@@ -74,10 +74,10 @@ module Full_Program_TestBench();
 				end
 				$stop;
 			end
-			
+
 			//next test
 			vector_num = vector_num + 1;
-		
-		end	
-		
+
+		end
+
 endmodule

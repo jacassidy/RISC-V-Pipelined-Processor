@@ -9,12 +9,12 @@ module immediateExtender #(
 ) (
     input   immSrc                  ImmSrc,
     input   logic[`WORD_SIZE-1:0]   Instr,
-    
-    output  logic[`BIT_COUNT-1:0]   Imm
+
+    output  logic[`XLEN-1:0]   Imm
 );
 
     logic[4:0]                      Immb4t0;
-    logic[($clog2(`BIT_COUNT)-1):0] shamt;
+    logic[($clog2(`XLEN)-1):0] shamt;
     logic[11:5]                     Immb11t5;
     logic[11:0]                     Immb11t0;
     logic[31:12]                    Immb31t12;
@@ -25,7 +25,7 @@ module immediateExtender #(
 
     assign Immb11t0     = Instr[31:20];
 
-    assign shamt        = Instr[(19 + $clog2(`BIT_COUNT)):20];
+    assign shamt        = Instr[(19 + $clog2(`XLEN)):20];
 
     //Stype
     assign Immb4t0      = Instr[11:7];
@@ -43,15 +43,15 @@ module immediateExtender #(
     assign Immb4t1      = Instr[11:8];
     always_comb begin
         casex (ImmSrc)
-            IType:      Imm = {{(`BIT_COUNT-12)                 {Instr[31]}},   Immb11t0                                                };
-            Shamt:      Imm = {{(`BIT_COUNT-$clog2(`BIT_COUNT)) {1'bx     }},   shamt                                                   }; //Shift immediate, only 5 or 6 bits needed
-            SType:      Imm = {{(`BIT_COUNT-12)                 {Instr[31]}},   Immb11t5,   Immb4t0                                     };
-            UType:      Imm = {{(`BIT_COUNT-32)                 {Instr[31]}},   Immb31t12,  12'b0                                       };
-            JType:      Imm = {{(`BIT_COUNT-21)                 {Instr[31]}},   Instr[31],  Immb19t12,  Instr[20],  Immb10t1,   1'b0    };
-            BType:      Imm = {{(`BIT_COUNT-13)                 {Instr[31]}},   Instr[31],  Instr[7],   Immb10t5,   Immb4t1,    1'b0    };
+            IType:      Imm = {{(`XLEN-12)                 {Instr[31]}},   Immb11t0                                                };
+            Shamt:      Imm = {{(`XLEN-$clog2(`XLEN)) {1'bx     }},   shamt                                                   }; //Shift immediate, only 5 or 6 bits needed
+            SType:      Imm = {{(`XLEN-12)                 {Instr[31]}},   Immb11t5,   Immb4t0                                     };
+            UType:      Imm = {{(`XLEN-32)                 {Instr[31]}},   Immb31t12,  12'b0                                       };
+            JType:      Imm = {{(`XLEN-21)                 {Instr[31]}},   Instr[31],  Immb19t12,  Instr[20],  Immb10t1,   1'b0    };
+            BType:      Imm = {{(`XLEN-13)                 {Instr[31]}},   Instr[31],  Instr[7],   Immb10t5,   Immb4t1,    1'b0    };
 
             default:    Imm = 'x;
         endcase
     end
-    
+
 endmodule

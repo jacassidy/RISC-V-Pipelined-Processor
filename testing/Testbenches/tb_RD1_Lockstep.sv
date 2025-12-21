@@ -8,64 +8,64 @@ module RD1_Lockstep_TestBench();
 	//Supposed to be all RV32I instructions (not pipelined)
 	// localparam inputFileName 	="../TestCode/RD1_Lockstep/full_RV32I.hex";
 	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/expected_full_RV32I_outputs.hex";
-	// localparam BIT_COUNT 		= 32;
-	
+	// localparam XLEN 		= 32;
+
 	//Full RV32I chronological test
-	// localparam inputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex"; 
-	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv32i_chronological.hex"; 
-	// localparam BIT_COUNT 		= 32;
+	// localparam inputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex";
+	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv32i_chronological.hex";
+	// localparam XLEN 		= 32;
 
 	//Full Pipelined RV32I chronological test
-	// localparam inputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex"; 
-	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_pipelined_rv32i_chronological.hex"; 
-	// localparam BIT_COUNT 		= 32;
+	// localparam inputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv32i_chronological.hex";
+	// localparam outputFileName 	= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_pipelined_rv32i_chronological.hex";
+	// localparam XLEN 		= 32;
 
 	//Full RV64I chronological test
 	// localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";
 	// localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_rv64i_chronological.hex";
-	// localparam BIT_COUNT 			= 64;
+	// localparam XLEN 			= 64;
 
 	//Full Pipelined RV64I chronological test
 	localparam inputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/rv64i_chronological.hex";
 	localparam outputFileName 		= "../TestCode/RD1_Lockstep/Chronological_Instructions/expected_pipelined_rv64i_chronological.hex";
-	localparam BIT_COUNT 			= 64;
+	localparam XLEN 			= 64;
 
 	logic clk, reset;
 	logic result;
 	logic [31:0] vector_num, errors;
-	logic[`BIT_COUNT-1:0] ExpectedRd1;
+	logic[`XLEN-1:0] ExpectedRd1;
 	integer line_count = 0;
-	
+
 	//localvariables
 	// localparam inputVectorSize = (3 + bitCount * 2);
-	localparam outputVectorSize = (`BIT_COUNT);
-	
+	localparam outputVectorSize = (`XLEN);
+
 	// instantiate device under test
 	doubleMemoryCore #(.INSTRUCTION_MEMORY_FILE_NAME(inputFileName)) dut (.clk, .reset);
-	
+
 	//input and output vectors to be assigned and compared to inputs and outputs respectively
 	// logic [inputVectorSize-1:0] inputTestvectors[10000:0];
 	logic [outputVectorSize-1:0] outputTestvectors[10000:0];
-	
+
 	// generate clock
 	always begin
 		clk=1; #5; clk=0; #5;
 	end
-		
+
 	// at start of test, load vectors and pulse reset
 	initial begin
 		//Load Files
 		//$readmemb(inputFileName, inputTestvectors);
 		$readmemh(outputFileName, outputTestvectors);
-		
+
 		//Reset Values
-		vector_num = 0; errors = 0; reset = 1; 
-		
+		vector_num = 0; errors = 0; reset = 1;
+
 		#12; //Wait to reset
-		
+
 		reset = 0; //Begin
 	end
-		
+
 	// check results on falling edge of clk
 	always @(negedge clk)
 		if (~reset) begin // skip during reset
@@ -90,11 +90,11 @@ module RD1_Lockstep_TestBench();
 					errors = errors + 1;
 				end
 			end
-			
+
 			//next test
 			vector_num = vector_num + 1;
-		
-		end	
+
+		end
 
 	integer fd;
 	integer r;
@@ -116,5 +116,5 @@ module RD1_Lockstep_TestBench();
 		end
 		$fclose(fd);
 	end
-			
+
 endmodule

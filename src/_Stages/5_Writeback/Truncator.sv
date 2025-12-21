@@ -7,28 +7,45 @@ import HighLevelControl::*;
 module truncator #(
 
 ) (
-    input   truncSrc                TruncSrc,
-    input   logic[`BIT_COUNT-1:0]    Input,
+    input   truncType                   TruncType,
+    input   logic[$clog2(`XLEN/8)-1:0]  TruncSrc,
+    input   logic[`XLEN-1:0]            InputData,
 
-    output  logic[`BIT_COUNT-1:0]    TruncResult
+    output  logic[`XLEN-1:0]            TruncResult
 );
+    logic misaligned;
 
     always_comb begin
-        casex (TruncSrc)
-            BYTE:               TruncResult = {{(`BIT_COUNT-8)   {Input[7]}},   Input[7:0]  };
-            HALF_WORD:          TruncResult = {{(`BIT_COUNT-16)  {Input[15]}},  Input[15:0] };
-            WORD:               TruncResult = {{(`BIT_COUNT-32)  {Input[31]}},  Input[31:0] };
-            
-            BYTE_UNSIGNED:      TruncResult = {{(`BIT_COUNT-8)   {1'b0}},       Input[7:0]  };
-            HALF_WORD_UNSIGNED: TruncResult = {{(`BIT_COUNT-16)  {1'b0}},       Input[15:0] };
 
-            `ifdef BIT_COUNT_64
-                WORD_UNSIGNED:  TruncResult = {{(`BIT_COUNT-32)  {1'b0}},       Input[31:0] };
+        case (TruncType)
+            HALF_WORD:          misaligned  = TruncSrc[0];      // halfword: bit0 must be 0
+            HALF_WORD_UNSIGNED: misaligned  = TruncSrc[0];
+            WORD:               misaligned  = |TruncSrc[1:0];   // word: low 2 bits must be 0 (for 32-bit word)
+            `ifdef XLEN_64
+            WORD_UNSIGNED:      misaligned  = |TruncSrc[1:0];   // dword: low 3 bits must be 0
             `endif
-
-            NO_TRUNC:           TruncResult = Input;
-            default:            TruncResult = truncSrc'('x);
+            default :           misaligned = 1'b0;
         endcase
+
+        if (misaligned) begin
+            TruncResult = 'x;   // and raise/store-misaligned exception elsewhere
+        end else begin
+            casex (TruncType)
+                BYTE:               TruncResult = {{(`XLEN-8)   {InputData[TruncSrc*8+7]}},     InputData[(TruncSrc<<3)+7  -: 8 ]  };
+                HALF_WORD:          TruncResult = {{(`XLEN-16)  {InputData[TruncSrc*8+15]}},    InputData[(TruncSrc<<3)+15 -: 16] };
+                WORD:               TruncResult = {{(`XLEN-32)  {InputData[TruncSrc*8+31]}},    InputData[(TruncSrc<<3)+31 -: 32] };
+
+                BYTE_UNSIGNED:      TruncResult = {{(`XLEN-8)   {1'b0}},                        InputData[(TruncSrc<<3)+7  -: 8 ]  };
+                HALF_WORD_UNSIGNED: TruncResult = {{(`XLEN-16)  {1'b0}},                        InputData[(TruncSrc<<3)+15 -: 15] };
+
+                `ifdef XLEN_64
+                    WORD_UNSIGNED:  TruncResult = {{(`XLEN-32)  {1'b0}},                        InputData[(TruncSrc<<3)+31 -: 32] };
+                `endif
+
+                NO_TRUNC:           TruncResult = InputData;
+                default:            TruncResult = 'x;
+            endcase
+        end
     end
-    
+
 endmodule

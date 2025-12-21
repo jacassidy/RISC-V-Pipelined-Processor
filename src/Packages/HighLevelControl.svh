@@ -37,7 +37,7 @@ package HighLevelControl;
         LoadImm
     } passthroughSrc;
 
-    typedef enum logic {  
+    typedef enum logic {
         Rs2     = 1'b0,
         Imm     = 1'b1
     } aluSrcB;
@@ -51,7 +51,7 @@ package HighLevelControl;
         SLT,
         SLTU,
 
-        `ifdef BIT_COUNT_64
+        `ifdef XLEN_64
             ADDW,
             SUBW,
             SLLW,
@@ -65,6 +65,13 @@ package HighLevelControl;
 
 
     } aluOperation;
+
+    typedef enum logic[1:0] {
+        Store_Byte,
+        Store_Half_Word,
+        Store_Word,
+        Store_Double_Word
+    } storeType;
 
     //Could feed all data out of ALU and combine with this mux
     typedef enum logic {
@@ -84,12 +91,12 @@ package HighLevelControl;
         BYTE_UNSIGNED,
         HALF_WORD_UNSIGNED,
 
-        `ifdef BIT_COUNT_64
+        `ifdef XLEN_64
             WORD_UNSIGNED,
         `endif
 
         NO_TRUNC
-    } truncSrc;
+    } truncType;
 
     `ifdef PIPELINED
 

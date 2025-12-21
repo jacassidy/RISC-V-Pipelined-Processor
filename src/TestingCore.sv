@@ -7,7 +7,7 @@ module testingCore(
     input   logic                       reset,
 
     output  logic [`XLEN-1:0]           PC,  // instruction memory target address
-    input   logic [`XLEN-1:0]           Instr, // instruction memory read data
+    input   logic [31:0]                Instr, // instruction memory read data
 
     output  logic [`XLEN-1:0]           IEUAdr,  // data memory target address
     input   logic [`XLEN-1:0]           ReadData, // data memory read data
@@ -18,23 +18,23 @@ module testingCore(
     output  logic [`XLEN/8-1:0]         WriteByteEn  // strobes, 1 hot stating weather a byte should be written on a store
   );
 
-    logic[`BIT_COUNT-1:0]       InstrAdr;
+    logic[`XLEN-1:0]       InstrAdr;
 
     logic                       MemWriteEn;
-    logic[`BIT_COUNT-1:0]       MemWriteData, MemReadData;
-    logic[`BIT_COUNT-1:0]       MemAdr;
-    logic[(`BIT_COUNT/8)-1:0]   MemByteEn;
+    logic[`XLEN-1:0]       MemWriteData, MemReadData;
+    logic[`XLEN-1:0]       MemAdr;
+    logic[(`XLEN/8)-1:0]   MemWriteByteEn;
 
     //Instruction Memory
     assign PC = InstrAdr;
 
     //Compute Core
     computeCore ComputeCore(.clk, .reset, .External_PC(InstrAdr), .External_MemEn(MemEn), .External_MemWriteEn(MemWriteEn),
-        .External_MemByteEn(MemByteEn), .External_MemAdr(MemAdr), .External_MemWriteData(MemWriteData),
+        .External_MemWriteByteEn(MemWriteByteEn), .External_MemAdr(MemAdr), .External_MemWriteData(MemWriteData),
         .External_Instr(Instr), .External_MemReadData(MemReadData));
 
     //Data Memory
-    assign WriteByteEn      = MemByteEn & {4{MemWriteEn}};
+    assign WriteByteEn      = MemWriteByteEn & {4{MemWriteEn}};
     assign IEUAdr           = MemAdr;
     assign WriteData        = MemWriteData;
     assign WriteEn          = MemWriteEn;
