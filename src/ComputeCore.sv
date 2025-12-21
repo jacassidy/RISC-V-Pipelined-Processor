@@ -13,7 +13,7 @@ module computeCore #(
 
     output  logic                  External_MemEn,
     output  logic                  External_MemWriteEn,     //Command Memory to write
-    output  logic[(`XLEN/8)-1:0]   External_MemWriteByteEn,      //Bytes to be writen
+    output  logic[(`XLEN/8)-1:0]   External_MemWriteByteEn, //Bytes to be writen
     output  logic[`XLEN-1:0]       External_MemAdr,         //Memory Adress
     output  logic[`XLEN-1:0]       External_MemWriteData,   //Memory to be saved
 
@@ -57,7 +57,8 @@ module computeCore #(
     HighLevelControl::truncType         TruncType_R;
 
                         ////****C Stage****////
-    logic[`XLEN-1:0]                    Passthrough_C, AluOperandA_C, AluOperandB_C, AluResult_C, ComputeResult_C, MemWriteData_C;
+    logic[`XLEN-1:0]                    Passthrough_C, AluOperandA_C, AluOperandB_C, AluResult_C, ComputeResult_C;
+    logic[`XLEN-1:0]                    MemWriteData_C, MemWriteDataPreShift_C;
     logic[$clog2(`WORD_SIZE)-1:0]       rd1Adr_C;
     logic[`XLEN-1:0]                    AluHazzardSafeOperandA_C, AluHazzardSafeOperandB_C;
 
@@ -73,7 +74,7 @@ module computeCore #(
 
     //M
     logic                               MemEn_C, MemWriteEn_C;
-    logic[`XLEN-1:0]                    DataMemAdr_C;
+    logic[$clog2(`XLEN/8)-1:0]          DataMemAdrByteOffset_C;
     HighLevelControl::storeType         StoreType_C;
     logic[(`XLEN/8)-1:0]                MemWriteByteEn_C;
 
@@ -329,7 +330,7 @@ module computeCore #(
         endcase
     end
 
-    assign DataMemAdr_C = ComputeResult_C;
+    assign DataMemAdrByteOffset_C = AluHazzardSafeOperandA_C[$clog2(`XLEN/8)-1:0] + AluHazzardSafeOperandB_C[$clog2(`XLEN/8)-1:0];
 
     // Determine Mem byte en bits
 
@@ -338,14 +339,14 @@ module computeCore #(
         logic[BYTE_OFFSET_BITS-1:0]    ByteOffset;
         logic misaligned;
 
-        ByteOffset              = DataMemAdr_C[BYTE_OFFSET_BITS-1:0];
+        ByteOffset              = DataMemAdrByteOffset_C;
         MemWriteByteEn_C        = '0;
 
         case (StoreType_C)
-            HighLevelControl::Store_Half_Word:    misaligned  = DataMemAdr_C[0];      // halfword: bit0 must be 0
-            HighLevelControl::Store_Word:         misaligned  = |DataMemAdr_C[1:0];   // word: low 2 bits must be 0 (for 32-bit word)
+            HighLevelControl::Store_Half_Word:    misaligned  = DataMemAdrByteOffset_C[0];      // halfword: bit0 must be 0
+            HighLevelControl::Store_Word:         misaligned  = |DataMemAdrByteOffset_C[1:0];   // word: low 2 bits must be 0 (for 32-bit word)
             `ifdef XLEN_64
-            HighLevelControl::Store_Double_Word:  misaligned  = |DataMemAdr_C[2:0];   // dword: low 3 bits must be 0
+            HighLevelControl::Store_Double_Word:  misaligned  = |DataMemAdrByteOffset_C[2:0];   // dword: low 3 bits must be 0
             `endif
             default:            misaligned = 1'b0;
         endcase
@@ -374,21 +375,23 @@ module computeCore #(
         always_comb begin
 
             casex(Rs2ForwardSrc_C)
-                HighLevelControl::Rs2_NO_FORWARD:       MemWriteData_C = Passthrough_C;
-                HighLevelControl::Rs2_ComputeResult:    MemWriteData_C = ComputeResult_M;
-                HighLevelControl::Rs2_Rd1W:             MemWriteData_C = Rd1_W;
-                HighLevelControl::Rs2_Rd1PostW:         MemWriteData_C = Rd1_PostW;
+                HighLevelControl::Rs2_NO_FORWARD:       MemWriteDataPreShift_C = Passthrough_C;
+                HighLevelControl::Rs2_ComputeResult:    MemWriteDataPreShift_C = ComputeResult_M;
+                HighLevelControl::Rs2_Rd1W:             MemWriteDataPreShift_C = Rd1_W;
+                HighLevelControl::Rs2_Rd1PostW:         MemWriteDataPreShift_C = Rd1_PostW;
 
-                default:                                MemWriteData_C = 'x;
+                default:                                MemWriteDataPreShift_C = 'x;
             endcase
 
         end
 
     `else
 
-        assign MemWriteData_C = Passthrough_C;
+        assign MemWriteDataPreShift_C = Passthrough_C;
 
     `endif
+
+    assign MemWriteData_C = MemWriteDataPreShift_C << (`XLENlg2'(DataMemAdrByteOffset_C)<<3);
 
     `ifdef PIPELINED
 

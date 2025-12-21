@@ -31,12 +31,12 @@ module truncator #(
             TruncResult = 'x;   // and raise/store-misaligned exception elsewhere
         end else begin
             casex (TruncType)
-                BYTE:               TruncResult = {{(`XLEN-8)   {InputData[TruncSrc*8+7]}},     InputData[(TruncSrc<<3)+7  -: 8 ]  };
-                HALF_WORD:          TruncResult = {{(`XLEN-16)  {InputData[TruncSrc*8+15]}},    InputData[(TruncSrc<<3)+15 -: 16] };
-                WORD:               TruncResult = {{(`XLEN-32)  {InputData[TruncSrc*8+31]}},    InputData[(TruncSrc<<3)+31 -: 32] };
+                BYTE:               TruncResult = {{(`XLEN-8)   {InputData[(TruncSrc<<3)+7]}},  InputData[(TruncSrc<<3)+7  -: 8 ] };
+                HALF_WORD:          TruncResult = {{(`XLEN-16)  {InputData[(TruncSrc<<3)+15]}}, InputData[(TruncSrc<<3)+15 -: 16] };
+                WORD:               TruncResult = {{(`XLEN-32)  {InputData[(TruncSrc<<3)+31]}}, InputData[(TruncSrc<<3)+31 -: 32] };
 
-                BYTE_UNSIGNED:      TruncResult = {{(`XLEN-8)   {1'b0}},                        InputData[(TruncSrc<<3)+7  -: 8 ]  };
-                HALF_WORD_UNSIGNED: TruncResult = {{(`XLEN-16)  {1'b0}},                        InputData[(TruncSrc<<3)+15 -: 15] };
+                BYTE_UNSIGNED:      TruncResult = {{(`XLEN-8)   {1'b0}},                        InputData[(TruncSrc<<3)+7  -: 8 ] };
+                HALF_WORD_UNSIGNED: TruncResult = {{(`XLEN-16)  {1'b0}},                        InputData[(TruncSrc<<3)+15 -: 16] };
 
                 `ifdef XLEN_64
                     WORD_UNSIGNED:  TruncResult = {{(`XLEN-32)  {1'b0}},                        InputData[(TruncSrc<<3)+31 -: 32] };

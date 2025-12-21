@@ -98,7 +98,7 @@ module controller #(
     assign AluOperation_R                                           = Controller.AluOperation;
 
     assign ComputeSrc_R                                             = Controller.ComputeSrc;
-    assign StoreType                                                = Controller.StoreType;
+    assign StoreType_R                                              = Controller.StoreType;
     assign ResultSrc_R                                              = Controller.ResultSrc;
     assign TruncType_R                                              = Controller.TruncType;
 

@@ -20,7 +20,7 @@ module testingCore(
 
     logic[`XLEN-1:0]       InstrAdr;
 
-    logic                       MemWriteEn;
+    logic                  MemWriteEn;
     logic[`XLEN-1:0]       MemWriteData, MemReadData;
     logic[`XLEN-1:0]       MemAdr;
     logic[(`XLEN/8)-1:0]   MemWriteByteEn;
