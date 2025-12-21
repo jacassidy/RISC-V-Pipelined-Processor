@@ -12,7 +12,7 @@ module pcUpdateHandler #(
 
     //****NEEDS HAZZARD TO ASSESS PREDICTION***//
     input   logic                   Predict,
-    input   logic[`XLEN-1:0]   Prediction,
+    input   logic[`XLEN-1:0]        Prediction,
     input   logic                   PredictionCorrect_R,
     input   logic                   PredictionCorrect_C, //Current branch/Jump in C stage was predicted correctly, thus Jump in R should be considered
 
