@@ -5,11 +5,11 @@ module mux #(
     parameter INPUT_BUS_COUNT
 ) (
     input   logic[$clog2(INPUT_BUS_COUNT)-1:0]  selection,
-    input   logic[WIDTH-1:0]                    input_busses[INPUT_BUS_COUNT-1:0],
+    input   wire logic [WIDTH-1:0]              input_busses[INPUT_BUS_COUNT-1:0],
 
     output  logic[WIDTH-1:0]                    selected_data
 );
 
     assign selected_data = input_busses[selection];
-    
+
 endmodule

@@ -31,9 +31,15 @@ module registerFile #(
 
     generate
         for (i = 1; i < REGISTER_COUNT; i++) begin
-            flopRE #(.WIDTH(`XLEN)) flop(.clk(~clk), .reset,
+            `ifdef PIPELINED
+            flopNRE #(.WIDTH(`XLEN)) flop(.clk, .reset, // negedge shuld be skewed very heavily to be close to right after posedge as write is significantly shorter than read
                 .en(WriteEn && rd1Adr == i[REGISTER_SELECTION_WIDTH-1 : 0]),
                 .D(Rd1), .Q(register_values[i]));
+            `else
+            flopRE #(.WIDTH(`XLEN)) flop(.clk, .reset, // negedge shuld be skewed very heavily to be close to right after posedge as write is significantly shorter than read
+                .en(WriteEn && rd1Adr == i[REGISTER_SELECTION_WIDTH-1 : 0]),
+                .D(Rd1), .Q(register_values[i]));
+            `endif
         end
     endgenerate
 

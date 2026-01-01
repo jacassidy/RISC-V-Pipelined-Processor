@@ -2,21 +2,21 @@
 
 `include "parameters.svh"
 
-//               (1       +1      +1        )
-//                {RegWrite, MemEn, MemWrite}
-`define SIGNAL_SIZE 3
-
 typedef struct packed {
 
-    logic[`SIGNAL_SIZE-1:0]                 signals;
+    logic                                   RegWrite;
+    logic                                   MemEn;
+    logic                                   MemWriteEn;
 
     HighLevelControl::pcSrc                 PCSrc;
     HighLevelControl::conditionalPCSrc      ConditionalPCSrc;
 
-    HighLevelControl::immSrc                ImmSrc;
+    HighLevelControl::immSrc                ImmSrcA;
+    HighLevelControl::immSrc                ImmSrcB;
     HighLevelControl::passthroughSrc        PassthroughSrc;
 
-    HighLevelControl::aluSrcB               AluSrcB;
+    HighLevelControl::aluSrc                AluSrcA;
+    HighLevelControl::aluSrc                AluSrcB;
     HighLevelControl::aluOperation          AluOperation;
 
     HighLevelControl::computeSrc            ComputeSrc;
@@ -24,42 +24,59 @@ typedef struct packed {
     HighLevelControl::resultSrc             ResultSrc;
     HighLevelControl::truncType             TruncType;
 
+    `ifdef ZICSR
+    logic                                   CSREn;
+    HighLevelControl::csrOp                 CSROp;
+    `endif
+
 } controlSignals;
 
-function automatic void setControllerX(ref controlSignals ctrl);
+function automatic controlSignals ControllerDefault();
 
-    //{RegWrite, MemEn, MemWrite,      ByteEn}
-    ctrl.signals            = `SIGNAL_SIZE'b0;
+    controlSignals ctrl;
 
-    ctrl.PCSrc              = HighLevelControl::pcSrc'('x);
-    ctrl.ConditionalPCSrc   = HighLevelControl::conditionalPCSrc'('x);
+    ctrl.RegWrite           = 1'b0;
+    ctrl.MemEn              = 1'b0;
+    ctrl.MemWriteEn         = 1'b0;
 
-    ctrl.ImmSrc             = HighLevelControl::immSrc'('x);
+    ctrl.PCSrc              = HighLevelControl::PCp4_I;
+    ctrl.ConditionalPCSrc   = HighLevelControl::NO_BRANCH;
+
+    ctrl.ImmSrcA            = HighLevelControl::immSrc'('x);
+    ctrl.ImmSrcB            = HighLevelControl::immSrc'('x);
     ctrl.PassthroughSrc     = HighLevelControl::passthroughSrc'('x);
 
-    ctrl.AluSrcB            = HighLevelControl::aluSrcB'('x);
+    ctrl.AluSrcA            = HighLevelControl::Rs;
+    ctrl.AluSrcB            = HighLevelControl::Rs;
     ctrl.AluOperation       = HighLevelControl::aluOperation'('x);
 
     ctrl.ComputeSrc         = HighLevelControl::computeSrc'('x);
     ctrl.StoreType          = HighLevelControl::storeType'('x);
-    ctrl.ResultSrc          = HighLevelControl::resultSrc'('x);
-    ctrl.TruncType          = HighLevelControl::truncType'('x);
+    ctrl.ResultSrc          = HighLevelControl::Compute;
+    ctrl.TruncType          = HighLevelControl::NO_TRUNC;
+
+    `ifdef ZICSR
+    ctrl.CSREn              = 1'b0;
+    ctrl.CSROp              = HighLevelControl::csrOp'('x);;
+    `endif
+
+    return ctrl;
 
 endfunction
 
-module controller #(
-
-) (
+module controller (
     input   logic[`WORD_SIZE-1:0]               Instr_R,
 
     output HighLevelControl::pcSrc              PCSrc_R,
     output HighLevelControl::conditionalPCSrc   ConditionalPCSrc_R,
     output logic                                RegWrite_R,
 
-    output HighLevelControl::immSrc             ImmSrc_R,
+    output HighLevelControl::immSrc             ImmSrcA_R,
+    output HighLevelControl::immSrc             ImmSrcB_R,
     output HighLevelControl::passthroughSrc     PassthroughSrc_R,
 
-    output HighLevelControl::aluSrcB            AluSrcB_R,
+    output HighLevelControl::aluSrc             AluSrcA_R,
+    output HighLevelControl::aluSrc             AluSrcB_R,
     output HighLevelControl::aluOperation       AluOperation_R,
 
     output HighLevelControl::computeSrc         ComputeSrc_R,
@@ -70,14 +87,23 @@ module controller #(
 
     output HighLevelControl::resultSrc          ResultSrc_R,
     output HighLevelControl::truncType          TruncType_R
+
+    `ifdef ZICSR
+    ,
+    output logic                                CSREn_R,
+    output HighLevelControl::csrOp              CSROp_R
+    `endif
 );
     logic[2:0] funct3;
     logic[6:0] opcode, funct7;
+    logic[4:0] rs1, rd;
 
     //Bus Assignments
-    assign opcode = Instr_R[6:0];
+    assign opcode = Instr_R[ 6:0 ];
     assign funct3 = Instr_R[14:12];
     assign funct7 = Instr_R[31:25];
+    assign rs1    = Instr_R[19:15];
+    assign rd     = Instr_R[11:7 ];
 
     controlSignals Controller, RType, IType, LType, SType, UType, JType, BType;
 
@@ -85,15 +111,23 @@ module controller #(
         controlSignals RWType, IWType;
     `endif
 
-    //Transition to enum to simplify
-    assign {RegWrite_R, MemEn_R, MemWriteEn_R}                      = Controller.signals;
+    `ifdef ZICSR
+        controlSignals CSRType;
+    `endif
+
+    // Transition to enum to simplify
+    assign RegWrite_R                                               = Controller.RegWrite;
+    assign MemEn_R                                                  = Controller.MemEn;
+    assign MemWriteEn_R                                             = Controller.MemWriteEn;
 
     assign PCSrc_R                                                  = Controller.PCSrc;
     assign ConditionalPCSrc_R                                       = Controller.ConditionalPCSrc;
 
-    assign ImmSrc_R                                                 = Controller.ImmSrc;
+    assign ImmSrcA_R                                                = Controller.ImmSrcA;
+    assign ImmSrcB_R                                                = Controller.ImmSrcB;
     assign PassthroughSrc_R                                         = Controller.PassthroughSrc;
 
+    assign AluSrcA_R                                                = Controller.AluSrcA;
     assign AluSrcB_R                                                = Controller.AluSrcB;
     assign AluOperation_R                                           = Controller.AluOperation;
 
@@ -102,7 +136,12 @@ module controller #(
     assign ResultSrc_R                                              = Controller.ResultSrc;
     assign TruncType_R                                              = Controller.TruncType;
 
-    //R-Type Controller
+    `ifdef ZICSR
+    assign CSREn_R                                                  = Controller.CSREn;
+    assign CSROp_R                                                  = Controller.CSROp;
+    `endif
+
+    // Controller Types
     rTypeController     RTypeController (.funct7,   .funct3,            .Controller(RType)  );
     iTypeController     ITypeController (.funct7,   .funct3,            .Controller(IType)  );
     lTypeController     LTypeController (.funct3,                       .Controller(LType)  );
@@ -114,6 +153,10 @@ module controller #(
     `ifdef XLEN_64
         rwTypeController     RWTypeController (.funct7, .funct3,            .Controller(RWType)  );
         iwTypeController     IWTypeController (.funct7, .funct3,            .Controller(IWType)  );
+    `endif
+
+    `ifdef ZICSR
+        csrTypeController    CSRTypeController (.rs1, .rd, .funct3,         .Controller(CSRType) );
     `endif
 
     always_comb begin
@@ -132,12 +175,18 @@ module controller #(
                 7'b0011011: Controller  = IWType;
             `endif
 
+            `ifdef ZICSR
+                7'b1110011: Controller  = CSRType;
+            `endif
+
             default: begin // instruction not supported
-                setControllerX(Controller);
-                // if (Instr_R !== 'x && Instr_R !== 0) begin
-                //     $display("Instruction not implemented: Machine Code (%h)", Instr_R);
-                //     $finish(-1);
-                // end
+                Controller = ControllerDefault();
+                `ifdef DEBUG_PRINT
+                if (Instr_R !== 'x && Instr_R !== 0) begin
+                    $display("Instruction not implemented: Machine Code (%h)", Instr_R);
+                    $finish(-1);
+                end
+                `endif
             end
 
         endcase
@@ -153,22 +202,27 @@ module rTypeController(
     output  controlSignals  Controller
 );
 
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.ImmSrc            = HighLevelControl::immSrc'('x);
-    assign Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
-
-    assign Controller.AluSrcB           = HighLevelControl::Rs2;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncType         = HighLevelControl::NO_TRUNC;
-
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                              = `SIGNAL_SIZE'b1_0_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        // Controller.ImmSrcB           = HighLevelControl::immSrc'('x);
+        // Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
+
+        Controller.AluSrcB              = HighLevelControl::Rs;
+
+        Controller.ComputeSrc           = HighLevelControl::ALU;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
+
         casex({funct7, funct3})
             10'b0000000_000: Controller.AluOperation    = HighLevelControl::ADD;
             10'b0100000_000: Controller.AluOperation    = HighLevelControl::SUB;
@@ -183,10 +237,13 @@ module rTypeController(
 
             default: begin
                 Controller.AluOperation                 = HighLevelControl::aluOperation'('x);
-                Controller.signals                      = `SIGNAL_SIZE'b0;
+                Controller.RegWrite                     = 1'b0;
+                Controller.MemEn                        = 1'b0;
+                Controller.MemWriteEn                   = 1'b0;
             end
 
         endcase
+
     end
 
 endmodule
@@ -199,50 +256,55 @@ module iTypeController(
     output  controlSignals  Controller
 );
 
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
-
-    assign Controller.AluSrcB           = HighLevelControl::Imm;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncType         = HighLevelControl::NO_TRUNC;
-
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                  = `SIGNAL_SIZE'b1_0_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        // Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
+
+        Controller.AluSrcB              = HighLevelControl::Imm;
+
+        Controller.ComputeSrc           = HighLevelControl::ALU;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
+
         casex(funct3)
             //normal immediate operations
             3'b000: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::ADD;
             end
             3'b110: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::OR;
             end
             3'b111: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::AND;
             end
             3'b100: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::XOR;
             end
             3'b010: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::SLT;
             end
             3'b011: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::SLTU;
             end
             //Shift immediate operations
             3'b001: begin
-                Controller.ImmSrc           = HighLevelControl::Shamt;
+                Controller.ImmSrcB          = HighLevelControl::Shamt;
 
                 if((funct7 == 7'b0000000 && `XLEN == 32) || (funct7[6:1] == 6'b000000 && `XLEN == 64)) begin
 
@@ -251,12 +313,14 @@ module iTypeController(
                 end else begin
 
                     Controller.AluOperation = HighLevelControl::aluOperation'('x);
-                    Controller.signals      = `SIGNAL_SIZE'b0;
+                    Controller.RegWrite     = 1'b0;
+                    Controller.MemEn        = 1'b0;
+                    Controller.MemWriteEn   = 1'b0;
 
                 end
             end
             3'b101: begin
-                Controller.ImmSrc           = HighLevelControl::Shamt;
+                Controller.ImmSrcB          = HighLevelControl::Shamt;
 
                 //32 bit shamt is outside of func7, in rv64i immb5 extends into funct7
                 if((funct7 == 7'b0100000 && `XLEN == 32) || (funct7[6:1] == 6'b010000 && `XLEN == 64)) begin
@@ -270,15 +334,19 @@ module iTypeController(
                 end else begin
 
                     Controller.AluOperation = HighLevelControl::aluOperation'('x);
-                    Controller.signals      = `SIGNAL_SIZE'b0;
+                    Controller.RegWrite     = 1'b0;
+                    Controller.MemEn        = 1'b0;
+                    Controller.MemWriteEn   = 1'b0;
 
                 end
             end
 
             default: begin
-                Controller.ImmSrc           = HighLevelControl::immSrc'('x);
+                Controller.ImmSrcB          = HighLevelControl::immSrc'('x);
                 Controller.AluOperation     = HighLevelControl::aluOperation'('x);
-                Controller.signals          = `SIGNAL_SIZE'b0;
+                Controller.RegWrite         = 1'b0;
+                Controller.MemEn            = 1'b0;
+                Controller.MemWriteEn       = 1'b0;
             end
 
         endcase
@@ -293,38 +361,44 @@ module lTypeController(
     output  controlSignals  Controller
 );
 
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.ImmSrc            = HighLevelControl::IType;
-    assign Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
-
-    assign Controller.AluSrcB           = HighLevelControl::Imm;
-    assign Controller.AluOperation      = HighLevelControl::ADD;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Memory;
-
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                  = `SIGNAL_SIZE'b1_1_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b1;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        Controller.ImmSrcB              = HighLevelControl::IType;
+        // Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
+
+        Controller.AluSrcB              = HighLevelControl::Imm;
+        Controller.AluOperation         = HighLevelControl::ADD;
+
+        Controller.ComputeSrc           = HighLevelControl::ALU;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Memory;
 
         casex(funct3)
-            3'b000: Controller.TruncType     = HighLevelControl::BYTE;
-            3'b001: Controller.TruncType     = HighLevelControl::HALF_WORD;
-            3'b010: Controller.TruncType     = HighLevelControl::WORD;
-            3'b100: Controller.TruncType     = HighLevelControl::BYTE_UNSIGNED;
-            3'b101: Controller.TruncType     = HighLevelControl::HALF_WORD_UNSIGNED;
+            3'b000: Controller.TruncType        = HighLevelControl::BYTE;
+            3'b001: Controller.TruncType        = HighLevelControl::HALF_WORD;
+            3'b010: Controller.TruncType        = HighLevelControl::WORD;
+            3'b100: Controller.TruncType        = HighLevelControl::BYTE_UNSIGNED;
+            3'b101: Controller.TruncType        = HighLevelControl::HALF_WORD_UNSIGNED;
 
             `ifdef XLEN_64
-                3'b110: Controller.TruncType = HighLevelControl::WORD_UNSIGNED;
-                3'b011: Controller.TruncType = HighLevelControl::NO_TRUNC;
+                3'b110: Controller.TruncType    = HighLevelControl::WORD_UNSIGNED;
+                3'b011: Controller.TruncType    = HighLevelControl::NO_TRUNC;
             `endif
 
             default: begin
-                Controller.TruncType         = HighLevelControl::truncType'('x);
-                Controller.signals          = `SIGNAL_SIZE'b0;
+                Controller.TruncType            = HighLevelControl::truncType'('x);
+                Controller.RegWrite             = 1'b0;
+                Controller.MemEn                = 1'b0;
+                Controller.MemWriteEn           = 1'b0;
             end
 
         endcase
@@ -339,25 +413,28 @@ module sTypeController(
     output  controlSignals  Controller
 );
 
-    assign Controller.signals           = `SIGNAL_SIZE'b0_1_1;
-
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.ImmSrc            = HighLevelControl::SType;
-    assign Controller.PassthroughSrc    = HighLevelControl::WriteData;
-
-    assign Controller.AluSrcB           = HighLevelControl::Imm;
-    assign Controller.AluOperation      = HighLevelControl::ADD;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.ResultSrc         = HighLevelControl::resultSrc'('x);
-    assign Controller.TruncType         = HighLevelControl::truncType'('x);
-
     always_comb begin
 
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b0;
+        Controller.MemEn                = 1'b1;
+        Controller.MemWriteEn           = 1'b1;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        Controller.ImmSrcB              = HighLevelControl::SType;
+        Controller.PassthroughSrc       = HighLevelControl::WriteData;
+
+        Controller.AluSrcB              = HighLevelControl::Imm;
+        Controller.AluOperation         = HighLevelControl::ADD;
+
+        Controller.ComputeSrc           = HighLevelControl::ALU;
+        // Controller.ResultSrc         = HighLevelControl::resultSrc'('x);
+        // Controller.TruncType         = HighLevelControl::truncType'('x);
+
         casex(funct3)
-            //{RegWrite, MemEn, MemWrite, ByteEn}
             3'b000:  Controller.StoreType   = HighLevelControl::Store_Byte;         //SB
             3'b001:  Controller.StoreType   = HighLevelControl::Store_Half_Word;    //SH
             3'b010:  Controller.StoreType   = HighLevelControl::Store_Word;         //SW
@@ -379,30 +456,36 @@ module uTypeController(
     output  controlSignals  Controller
 );
 
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.AluSrcB           = HighLevelControl::aluSrcB'('x);
-    assign Controller.AluOperation      = HighLevelControl::aluOperation'('x);
-
-    assign Controller.ImmSrc            = HighLevelControl::UType;
-
-    assign Controller.ComputeSrc        = HighLevelControl::Passthrough;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncType         = HighLevelControl::NO_TRUNC;
-
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                  = `SIGNAL_SIZE'b1_0_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        // Controller.AluSrcB           = HighLevelControl::aluSrc'('x);
+        // Controller.AluOperation      = HighLevelControl::aluOperation'('x);
+
+        Controller.ImmSrcB              = HighLevelControl::UType;
+
+        Controller.ComputeSrc           = HighLevelControl::Passthrough;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
 
         casex(opcode)
-            7'b0110111: Controller.PassthroughSrc  = HighLevelControl::LoadImm;  //LUI
-            7'b0010111: Controller.PassthroughSrc  = HighLevelControl::PCpImm;   //AUIPC
+            7'b0110111: Controller.PassthroughSrc   = HighLevelControl::LoadImm;  //LUI
+            7'b0010111: Controller.PassthroughSrc   = HighLevelControl::PCpImm;   //AUIPC
 
             default:    begin
-                Controller.PassthroughSrc          = HighLevelControl::passthroughSrc'('x);
-                Controller.signals          = `SIGNAL_SIZE'b0;
+                Controller.PassthroughSrc           = HighLevelControl::passthroughSrc'('x);
+                Controller.RegWrite                 = 1'b0;
+                Controller.MemEn                    = 1'b0;
+                Controller.MemWriteEn               = 1'b0;
             end
 
         endcase
@@ -417,33 +500,38 @@ module jTypeController(
     output  controlSignals  Controller
 );
 
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.PassthroughSrc    = HighLevelControl::PCp4;
-
-    assign Controller.AluOperation      = HighLevelControl::aluOperation'('x);
-
-    assign Controller.ComputeSrc        = HighLevelControl::Passthrough;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncType         = HighLevelControl::NO_TRUNC;
-
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                  = `SIGNAL_SIZE'b1_0_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        Controller.PassthroughSrc       = HighLevelControl::PCp4;
+
+        // Controller.AluOperation      = HighLevelControl::aluOperation'('x);
+
+        Controller.ComputeSrc           = HighLevelControl::Passthrough;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
+
         casex(opcode)
             7'b1101111: begin //JAL
                 Controller.PCSrc            = HighLevelControl::Jump_R;
 
-                Controller.ImmSrc           = HighLevelControl::JType;
+                Controller.ImmSrcB          = HighLevelControl::JType;
 
-                Controller.AluSrcB          = HighLevelControl::aluSrcB'('x);
+                Controller.AluSrcB          = HighLevelControl::aluSrc'('x);
             end
 
             7'b1100111: begin //JALR
                 Controller.PCSrc            = HighLevelControl::Jump_C;
 
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
 
                 Controller.AluSrcB          = HighLevelControl::Imm;
             end
@@ -452,11 +540,13 @@ module jTypeController(
             default: begin
                 Controller.PCSrc            = HighLevelControl::pcSrc'('x);
 
-                Controller.ImmSrc           = HighLevelControl::immSrc'('x);
+                Controller.ImmSrcB          = HighLevelControl::immSrc'('x);
 
-                Controller.AluSrcB          = HighLevelControl::aluSrcB'('x);
+                Controller.AluSrcB          = HighLevelControl::aluSrc'('x);
 
-                Controller.signals          = `SIGNAL_SIZE'b0;
+                Controller.RegWrite         = 1'b0;
+                Controller.MemEn            = 1'b0;
+                Controller.MemWriteEn       = 1'b0;
             end
 
         endcase
@@ -470,22 +560,27 @@ module bTypeController(
 
     output  controlSignals  Controller
 );
-    assign Controller.PCSrc             = HighLevelControl::Branch_C;
-
-    assign Controller.ImmSrc            = HighLevelControl::BType;
-    assign Controller.PassthroughSrc    = HighLevelControl::PCpImm;
-
-    assign Controller.AluSrcB           = HighLevelControl::Rs2;
-    assign Controller.AluOperation      = HighLevelControl::SUB;
-
-    assign Controller.ComputeSrc        = HighLevelControl::computeSrc'('x);
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::resultSrc'('x);
-    assign Controller.TruncType         = HighLevelControl::truncType'('x);
 
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                      = `SIGNAL_SIZE'b0_0_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b0;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::Branch_C;
+
+        Controller.ImmSrcB              = HighLevelControl::BType;
+        Controller.PassthroughSrc       = HighLevelControl::PCpImm;
+
+        Controller.AluSrcB              = HighLevelControl::Rs;
+        Controller.AluOperation         = HighLevelControl::SUB;
+
+        // Controller.ComputeSrc        = HighLevelControl::computeSrc'('x);
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        // Controller.ResultSrc         = HighLevelControl::resultSrc'('x);
+        // Controller.TruncType         = HighLevelControl::truncType'('x);
 
         casex(funct3)
             3'b000: Controller.ConditionalPCSrc = HighLevelControl::BEQ_C;
@@ -497,7 +592,9 @@ module bTypeController(
 
             default: begin
                 Controller.ConditionalPCSrc     = HighLevelControl::conditionalPCSrc'('x);
-                Controller.signals              = `SIGNAL_SIZE'b0;
+                Controller.RegWrite             = 1'b0;
+                Controller.MemEn                = 1'b0;
+                Controller.MemWriteEn           = 1'b0;
             end
 
         endcase
@@ -514,22 +611,26 @@ module rwTypeController(
 
     output  controlSignals  Controller
 );
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.ImmSrc            = HighLevelControl::immSrc'('x);
-    assign Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
-
-    assign Controller.AluSrcB           = HighLevelControl::Rs2;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncType          = HighLevelControl::NO_TRUNC;
 
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                              = `SIGNAL_SIZE'b1_0_0;
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        // Controller.ImmSrcB           = HighLevelControl::immSrc'('x);
+        // Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
+
+        Controller.AluSrcB              = HighLevelControl::Rs;
+
+        Controller.ComputeSrc           = HighLevelControl::ALU;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
 
         casex({funct7, funct3})
             10'b0000000_000: Controller.AluOperation    = HighLevelControl::ADDW;
@@ -541,7 +642,9 @@ module rwTypeController(
 
             default: begin
                 Controller.AluOperation                 = HighLevelControl::aluOperation'('x);
-                Controller.signals                      = `SIGNAL_SIZE'b0;
+                Controller.RegWrite                     = 1'b0;
+                Controller.MemEn                        = 1'b0;
+                Controller.MemWriteEn                   = 1'b0;
             end
 
         endcase
@@ -556,36 +659,41 @@ module iwTypeController(
 
     output  controlSignals  Controller
 );
-    assign Controller.PCSrc             = HighLevelControl::PCp4_I;
-    assign Controller.ConditionalPCSrc  = HighLevelControl::NO_BRANCH;
-
-    assign Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
-
-    assign Controller.AluSrcB           = HighLevelControl::Imm;
-
-    assign Controller.ComputeSrc        = HighLevelControl::ALU;
-    assign Controller.StoreType         = HighLevelControl::storeType'('x);
-    assign Controller.ResultSrc         = HighLevelControl::Compute;
-    assign Controller.TruncType         = HighLevelControl::NO_TRUNC;
 
     always_comb begin
-        //{RegWrite, MemEn, MemWrite, ByteEn}
-        Controller.signals                  = `SIGNAL_SIZE'b1_0_0;
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.PCSrc                = HighLevelControl::PCp4_I;
+        Controller.ConditionalPCSrc     = HighLevelControl::NO_BRANCH;
+
+        // Controller.PassthroughSrc    = HighLevelControl::passthroughSrc'('x);
+
+        Controller.AluSrcB              = HighLevelControl::Imm;
+
+        Controller.ComputeSrc           = HighLevelControl::ALU;
+        // Controller.StoreType         = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
 
         casex(funct3)
             //normal immediate operations
             3'b000: begin
-                Controller.ImmSrc           = HighLevelControl::IType;
+                Controller.ImmSrcB          = HighLevelControl::IType;
                 Controller.AluOperation     = HighLevelControl::ADDW;
             end
 
             //Shift immediate operations
             3'b001: begin
-                Controller.ImmSrc           = HighLevelControl::Shamt;
+                Controller.ImmSrcB          = HighLevelControl::Shamt;
                 Controller.AluOperation     = HighLevelControl::SLLW;
             end
             3'b101: begin
-                Controller.ImmSrc           = HighLevelControl::Shamt;
+                Controller.ImmSrcB          = HighLevelControl::Shamt;
 
                 if(funct7 == 7'b0100000) begin
 
@@ -598,18 +706,95 @@ module iwTypeController(
                 end else begin
 
                     Controller.AluOperation = HighLevelControl::aluOperation'('x);
-                    Controller.signals      = `SIGNAL_SIZE'b0;
+                    Controller.RegWrite     = 1'b0;
+                    Controller.MemEn        = 1'b0;
+                    Controller.MemWriteEn   = 1'b0;
 
                 end
             end
 
             default: begin
-                Controller.ImmSrc           = HighLevelControl::immSrc'('x);
+                Controller.ImmSrcB          = HighLevelControl::immSrc'('x);
                 Controller.AluOperation     = HighLevelControl::aluOperation'('x);
-                Controller.signals          = `SIGNAL_SIZE'b0;
+                Controller.RegWrite         = 1'b0;
+                Controller.MemEn            = 1'b0;
+                Controller.MemWriteEn       = 1'b0;
             end
 
         endcase
+    end
+
+endmodule
+
+`endif
+
+`ifdef ZICSR
+// CSR Read write atomic operations
+module csrTypeController(
+    input   logic[4:0]      rs1,
+    input   logic[4:0]      rd,
+    input   logic[2:0]      funct3,
+
+    output  controlSignals  Controller
+);
+
+    always_comb begin
+
+        Controller                      = ControllerDefault();
+
+        Controller.RegWrite             = 1'b1;
+        Controller.MemEn                = 1'b0;
+        Controller.MemWriteEn           = 1'b0;
+
+        Controller.ImmSrcB              = HighLevelControl::CSRAdrType;
+        Controller.PassthroughSrc       = HighLevelControl::passthroughSrc'('x);
+
+        Controller.AluSrcB              = HighLevelControl::Imm;
+        Controller.AluOperation         = HighLevelControl::aluOperation'('x);
+
+        Controller.ComputeSrc           = HighLevelControl::CSRRead;
+        Controller.StoreType            = HighLevelControl::storeType'('x);
+        Controller.ResultSrc            = HighLevelControl::Compute;
+        Controller.TruncType            = HighLevelControl::NO_TRUNC;
+
+        Controller.CSREn                = 1'b1;
+
+        casex (funct3)
+            3'b001: begin // CSSRW
+                Controller.RegWrite     = rd != '0;
+                Controller.CSROp        = HighLevelControl::Write;
+                Controller.AluSrcA      = HighLevelControl::Rs;
+            end
+            3'b101: begin // CSSRWI
+                Controller.RegWrite     = rd != '0;
+                Controller.CSROp        = HighLevelControl::Write;
+                Controller.ImmSrcA      = HighLevelControl::CSRValType;
+                Controller.AluSrcA      = HighLevelControl::Imm;
+            end
+            3'b010: begin // CSSRS
+                Controller.CSROp        = rs1 != '0 ? HighLevelControl::Set : HighLevelControl::Read;
+                Controller.AluSrcA      = HighLevelControl::Rs;
+            end
+            3'b110: begin // CSSRSI
+                Controller.CSROp        = rs1 != '0 ? HighLevelControl::Set : HighLevelControl::Read;
+                Controller.ImmSrcA      = HighLevelControl::CSRValType;
+                Controller.AluSrcA      = HighLevelControl::Imm;
+            end
+            3'b011: begin // CSSRC
+                Controller.CSROp        = rs1 != '0 ? HighLevelControl::Clear : HighLevelControl::Read;
+                Controller.AluSrcA      = HighLevelControl::Rs;
+            end
+            3'b111: begin // CSSRCI
+                Controller.CSROp        = rs1 != '0 ? HighLevelControl::Clear : HighLevelControl::Read;
+                Controller.ImmSrcA      = HighLevelControl::CSRValType;
+                Controller.AluSrcA      = HighLevelControl::Imm;
+            end
+            default: begin
+                Controller.RegWrite     = 1'b0;
+                Controller.CSREn        = 1'b0;
+            end
+        endcase
+
     end
 
 endmodule

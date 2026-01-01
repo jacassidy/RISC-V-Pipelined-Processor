@@ -1,0 +1,36 @@
+//James Kaden Cassidy jkc.cassidy@gmail.com 12/31/2025
+
+`include "parameters.svh"
+
+`ifdef ZICSR
+
+package ZICSRType;
+
+    localparam CSR_COUNT = 0
+
+    `define X(name, adr) + 1
+        `CSR_LIST(X)
+    `undef X
+
+    ;
+
+    typedef enum logic[$clog2(CSR_COUNT)-1:0] {
+
+        `define X(name, adr) name,
+            `CSR_LIST(X)
+        `undef X
+        dumby
+
+    } validCSRs;
+
+    typedef struct packed {
+        validCSRs           Name;
+        logic               WriteEn;
+        logic               ReadEn;
+        logic               InternalWriteEn;
+        logic[`XLEN-1:0]    InternalWriteData;
+        logic[`XLEN-1:0]    DefaultValue;
+    } csrCtrl;
+
+endpackage
+`endif

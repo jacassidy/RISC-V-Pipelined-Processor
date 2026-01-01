@@ -28,6 +28,10 @@ package HighLevelControl;
         UType,
         JType,
         BType
+        `ifdef ZICSR
+        ,CSRAdrType,
+        CSRValType
+        `endif
     } immSrc;
 
     typedef enum logic[1:0] {
@@ -38,9 +42,9 @@ package HighLevelControl;
     } passthroughSrc;
 
     typedef enum logic {
-        Rs2     = 1'b0,
+        Rs     = 1'b0,
         Imm     = 1'b1
-    } aluSrcB;
+    } aluSrc;
 
     typedef enum logic[3:0] { //make sure 0 operation cant turn operands 0 and 0 into anything else
         ADD,
@@ -74,9 +78,17 @@ package HighLevelControl;
     } storeType;
 
     //Could feed all data out of ALU and combine with this mux
-    typedef enum logic {
+    typedef enum logic
+    `ifdef ZICSR
+        [1:0]
+    `endif
+    {
         ALU,
         Passthrough
+    `ifdef ZICSR
+        ,
+        CSRRead
+    `endif
     } computeSrc;
 
     typedef enum logic {
@@ -113,6 +125,17 @@ package HighLevelControl;
             Rs2_Rd1W,
             Rs2_Rd1PostW
         } rs2ForwardSrc;
+
+    `endif
+
+    `ifdef ZICSR
+
+        typedef enum logic[1:0] {
+            Write,
+            Set,
+            Clear,
+            Read
+        } csrOp;
 
     `endif
 

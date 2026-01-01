@@ -44,11 +44,16 @@ module immediateExtender #(
     always_comb begin
         casex (ImmSrc)
             IType:      Imm = {{(`XLEN-12)                 {Instr[31]}},   Immb11t0                                                };
-            Shamt:      Imm = {{(`XLEN-$clog2(`XLEN)) {1'bx     }},   shamt                                                   }; //Shift immediate, only 5 or 6 bits needed
+            Shamt:      Imm = {{(`XLEN-$clog2(`XLEN))      {1'bx     }},   shamt                                                   }; //Shift immediate, only 5 or 6 bits needed
             SType:      Imm = {{(`XLEN-12)                 {Instr[31]}},   Immb11t5,   Immb4t0                                     };
             UType:      Imm = {{(`XLEN-32)                 {Instr[31]}},   Immb31t12,  12'b0                                       };
             JType:      Imm = {{(`XLEN-21)                 {Instr[31]}},   Instr[31],  Immb19t12,  Instr[20],  Immb10t1,   1'b0    };
             BType:      Imm = {{(`XLEN-13)                 {Instr[31]}},   Instr[31],  Instr[7],   Immb10t5,   Immb4t1,    1'b0    };
+
+            `ifdef ZICSR
+            CSRAdrType: Imm = {{(`XLEN-12)                 {1'b0     }},   Immb11t0                                                };
+            CSRValType: Imm = {{(`XLEN-5 )                 {1'b0     }},   Instr[19:15]                                            };
+            `endif
 
             default:    Imm = 'x;
         endcase
