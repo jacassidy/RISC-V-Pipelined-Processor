@@ -44,7 +44,7 @@ module hazzardUnit #(
         end
 
     end
-    
+
     typedef enum logic {Listening, LoadStall} hazzardState;
 
     hazzardState HazzardState, HazzardStateNext;
@@ -66,7 +66,7 @@ module hazzardUnit #(
 
         Rs1ForwardSrcNext       = HighLevelControl::Rs1_NO_FORWARD;
         Rs2ForwardSrcNext       = HighLevelControl::Rs2_NO_FORWARD;
-        
+
         FlushCM                 = 1'b0;
         StallPC                 = 1'b0;
         StallIR                 = 1'b0;
@@ -104,7 +104,7 @@ module hazzardUnit #(
 
                 end
                 //if forwarding from C stage
-                if (RegWrite_C && rd1Adr_C != 0 && rs2Adr_R == rd1Adr_C) begin    
+                if (RegWrite_C && rd1Adr_C != 0 && rs2Adr_R == rd1Adr_C) begin
 
                     //if its a load then must delay a cycle
                     if(MemEn_C) begin

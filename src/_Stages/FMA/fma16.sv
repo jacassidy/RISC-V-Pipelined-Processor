@@ -14,15 +14,15 @@
 `include "fmaUtils.svh"
 
 module  fma16 (
-    input   logic [15:0]    OperandA, 
-    input   logic [15:0]    OperandB, 
-    input   logic [15:0]    OperandC, 
-    input   logic           mul, 
-    input   logic           add, 
-    input   logic           negp, 
-    input   logic           negz, 
-    input   logic [1:0]     roundmode, 
-    output  logic [15:0]    result, 
+    input   logic [15:0]    OperandA,
+    input   logic [15:0]    OperandB,
+    input   logic [15:0]    OperandC,
+    input   logic           mul,
+    input   logic           add,
+    input   logic           negp,
+    input   logic           negz,
+    input   logic [1:0]     roundmode,
+    output  logic [15:0]    result,
     output  logic [3:0]     flags
 );
 
@@ -32,8 +32,8 @@ module  fma16 (
     logic[4:0]  OpAExponent,    OpBExponent,    OpCExponent;
 
     logic       OpANan,         OpBNan,         OpCNan;
-    
-    logic       MultiplicationResultSign;  
+
+    logic       MultiplicationResultSign;
     logic[5:0]  MultiplicationResultExponent;
     logic[21:0] MultiplicationResultMantisa;
 
@@ -48,7 +48,7 @@ module  fma16 (
 
     logic[4:0]  RoundedExponent;
     logic[9:0]  RoundedMantisa;
-    
+
     logic[15:0] AnticipatedResult;
 
     logic       InexactRound, StickyA, StickyB;
@@ -89,7 +89,7 @@ module  fma16 (
     ////Multiplier////
     multiplier Multiplier(.OpASign, .OpBSign, .OpCSign, .OpAExponent, .OpBExponent, .OpCExponent, .OpAMantisa, .OpBMantisa,
                             .OpCMantisa, .MultiplcationInputZero, .MultiplicationResultSign, .MultiplicationResultExponent,
-                            .MultiplicationResultMantisa, .MultiplicationExponentOverflow, .MultiplicationExponentUnderflow, 
+                            .MultiplicationResultMantisa, .MultiplicationExponentOverflow, .MultiplicationExponentUnderflow,
                             .MultiplicationExponentNegative);
 
     ////Accumulate calculation////
@@ -99,16 +99,16 @@ module  fma16 (
                             .MultiplicationResultZero(MultiplcationInputZero), .AccumulateSignMismatch, .StickyA, .StickyB,
                             .AccumulateResultSign, .AccumulateResultExponent, .AccumulateResultMantisa);
 
-    zeroSignAnticipator ZeroSignAnticipator(.roundmode, .OpASign, .OpBSign, .OpCSign, .MultiplicationExponentUnderflow, 
+    zeroSignAnticipator ZeroSignAnticipator(.roundmode, .OpASign, .OpBSign, .OpCSign, .MultiplicationExponentUnderflow,
                                             .MultiplcationInputZero, .ZeroResultSign);
 
     //Normalization
-    normalizationShifter NormalizationShifter(.AccumulateResultMantisa, .AccumulateResultExponent, .AccumulateResultSign, 
+    normalizationShifter NormalizationShifter(.AccumulateResultMantisa, .AccumulateResultExponent, .AccumulateResultSign,
                                                 .AccumulateSubtraction(AccumulateSignMismatch),  .MultiplicationExponentOverflow,
-                                                .ZeroResultSign, .NormalizedMantisa, .NormalizedExponent, .NormalizedSign, 
+                                                .ZeroResultSign, .NormalizedMantisa, .NormalizedExponent, .NormalizedSign,
                                                 .NormalizationOverflow);
 
-    rounder Rounder(.roundmode, .NormalizedSign, .NormalizedExponent, .NormalizedMantisa, .StickyA, .StickyB, 
+    rounder Rounder(.roundmode, .NormalizedSign, .NormalizedExponent, .NormalizedMantisa, .StickyA, .StickyB,
                     .PreRoundOverflow(MultiplicationExponentOverflow | (NormalizationOverflow)),
                     .RoundedExponent, .RoundedMantisa, .InexactRound, .RoundUpOverflow);
 
@@ -130,12 +130,12 @@ module  fma16 (
 
     specialCaseHandler SpecialCaseHandler(.OpAExponent, .OpBExponent, .OpCExponent, .OpAMantisa, .OpBMantisa,
                                         .OpCMantisa, .OpCSign, .MultiplicationExponentOverflow, .AccumulateSubtraction(AccumulateSignMismatch),
-                                        .MultiplicationResultSign, .AccumulateResultSign, .MultiplcationInputZero, 
-                                        .MultiplicationOperandInf, .ArithmaticInvalid, 
+                                        .MultiplicationResultSign, .AccumulateResultSign, .MultiplcationInputZero,
+                                        .MultiplicationOperandInf, .ArithmaticInvalid,
                                         .OpANan, .OpBNan, .OpCNan, .expectedFlags,
                                         .AnticipatedResult, .result, .flags);
 
-    
+
 
 endmodule
 
@@ -170,7 +170,7 @@ module multiplier(
     assign MultiplicationResultMantisa      = OpAMantisa * OpBMantisa & {(22){~MultiplcationInputZero}};
 
     //TODO (think works) Need to ensure that overflow is not due to negative 2s compliment
-    assign MultiplicationExponentOverflow   = MultiplicationResultExponent[5] & MultiplicationIntermediateExp[5]; 
+    assign MultiplicationExponentOverflow   = MultiplicationResultExponent[5] & MultiplicationIntermediateExp[5];
     assign MultiplicationExponentUnderflow  = MultiplicationResultExponent[5] & ~MultiplicationIntermediateExp[5];
     assign MultiplicationExponentNegative   = MultiplicationResultExponent[5];
 
@@ -184,11 +184,11 @@ module accumulator (
     input   logic       OpCSign,
     input   logic[4:0]  OpCExponent,
     input   logic[10:0] OpCMantisa,
-    
+
     input   logic       MultiplicationExponentNegative,
     input   logic       MultiplicationOperandInf,
     input   logic       MultiplicationExponentOverflow,
-    input   logic       MultiplicationResultZero, 
+    input   logic       MultiplicationResultZero,
 
     output  logic       AccumulateSignMismatch,
     output  logic       StickyA,
@@ -216,8 +216,8 @@ module accumulator (
     ////-----------CALCULATE SHIFT-----------////
     assign AccumulateExponentDiff   = MultiplicationResultExponent[5:0] - {1'b0, OpCExponent};
     assign NegExponentDiff          = AccumulateExponentDiff[5];
-    
-    assign OpCExponentGreater       = (NegExponentDiff | MultiplicationExponentNegative); 
+
+    assign OpCExponentGreater       = (NegExponentDiff | MultiplicationExponentNegative);
 
     assign AccumulateOpBShiftAmt    = AccumulateExponentDiff & {(7){~OpCExponentGreater}};
     assign AccumulateOpAShiftAmt    = (~AccumulateExponentDiff + 1) & {(7){OpCExponentGreater}} & {~MultiplicationExponentNegative, 6'b111111};
@@ -230,22 +230,22 @@ module accumulator (
     assign AccumulateOperandB = ShiftedOpCMantisa[21:0];
 
     //If the bottom bits are one or if the number was non-zero and has been completely shifted out (can consider the sticky )
-    assign StickyA = ((|ShiftedMultiplicationResultMantisa[-1:-20]) | 
-                    (~MultiplicationResultZero & (((AccumulateOpAShiftAmt[4] & AccumulateOpAShiftAmt[2]) 
+    assign StickyA = ((|ShiftedMultiplicationResultMantisa[-1:-20]) |
+                    (~MultiplicationResultZero & (((AccumulateOpAShiftAmt[4] & AccumulateOpAShiftAmt[2])
                     | (AccumulateOpAShiftAmt[4] & AccumulateOpAShiftAmt[3]) | (|AccumulateOpAShiftAmt[6:5])))));
     //When either the bottom bits are 1 or the number is non-zero and all the bits have been shifted out
-    assign StickyB = ((|ShiftedOpCMantisa[-1:-20]) | 
-                    ((|{OpCExponent, OpCMantisa}) & (((AccumulateOpBShiftAmt[4] & AccumulateOpBShiftAmt[2]) 
+    assign StickyB = ((|ShiftedOpCMantisa[-1:-20]) |
+                    ((|{OpCExponent, OpCMantisa}) & (((AccumulateOpBShiftAmt[4] & AccumulateOpBShiftAmt[2])
                     | (AccumulateOpBShiftAmt[4] & AccumulateOpBShiftAmt[3]) | (|AccumulateOpBShiftAmt[6:5])))));
 
     ////-----------ADD-----------////
 
     assign AccumulateSignMismatch           = MultiplicationResultSign ^ OpCSign;
 
-    assign SelectivelyInvertedAccumulateOpB = AccumulateSignMismatch ? 
+    assign SelectivelyInvertedAccumulateOpB = AccumulateSignMismatch ?
                                             ~{AccumulateOperandB, StickyB} : {AccumulateOperandB, StickyB};
 
-    assign AccumulateStandardMantisa        = {AccumulateOperandA, StickyA} + SelectivelyInvertedAccumulateOpB 
+    assign AccumulateStandardMantisa        = {AccumulateOperandA, StickyA} + SelectivelyInvertedAccumulateOpB
                                                 + {22'b0, AccumulateSignMismatch};
     assign AccumulateInvertedMantisa        = {AccumulateOperandB, StickyB} - {AccumulateOperandA, StickyA};
 
@@ -253,9 +253,9 @@ module accumulator (
 
     assign SelectAccumulateInvertedMantisa = ~AccumulateInvertedMantisaNegative & AccumulateSignMismatch;
 
-    assign AccumulateResultSign         = MultiplicationResultSign ^ 
+    assign AccumulateResultSign         = MultiplicationResultSign ^
                                         ((AccumulateSignMismatch & SelectAccumulateInvertedMantisa) & ~MultiplicationOperandInf & ~MultiplicationExponentOverflow);
-    
+
     assign AccumulateResultExponent     = OpCExponentGreater ? OpCExponent : MultiplicationResultExponent[4:0];
     assign AccumulateResultMantisa      = SelectAccumulateInvertedMantisa ? AccumulateInvertedMantisa : AccumulateStandardMantisa;
 
@@ -296,7 +296,7 @@ module zeroSignAnticipator(
         endcase
     end
 
-    
+
 
 endmodule
 
@@ -304,7 +304,7 @@ endmodule
 module normalizationShifter (
     input   logic[23:0] AccumulateResultMantisa,
     input   logic[4:0]  AccumulateResultExponent,
-    input   logic       AccumulateResultSign, 
+    input   logic       AccumulateResultSign,
     input   logic       AccumulateSubtraction,
 
     input   logic       ZeroResultSign,
@@ -322,7 +322,7 @@ module normalizationShifter (
     logic           CarryOut;
 
     always_comb begin
-        
+
         idx = 1;
         //TODO Multiplication exponent overflow is to make sure the normalized sign isnt modified on the hyper edge case there is an overflow and the mantisa is 0
         if(~((AccumulateResultMantisa[23] & ~AccumulateSubtraction) | (|AccumulateResultMantisa[22:1])) & ~MultiplicationExponentOverflow) begin //If accumulate produces 0
@@ -345,12 +345,12 @@ module normalizationShifter (
                 ShiftAmt = 5'(2 - idx);
                 {CarryOut, NormalizedExponent} = AccumulateResultExponent + 5'(idx);
                 NormalizationOverflow = (CarryOut & (idx >= 0)) | (&NormalizedExponent); //if index is negative than carry bit isn't overflow
-            end       
+            end
             NormalizedMantisa = (AccumulateResultMantisa << ShiftAmt);
-            NormalizedSign  = AccumulateResultSign;    
+            NormalizedSign  = AccumulateResultSign;
         end
-    end    
-    
+    end
+
 endmodule
 
 module rounder(
@@ -396,7 +396,7 @@ module rounder(
                     RoundUp = NormalizedSign;
                 end else begin
                     if(NormalizedSign) begin
-                        casez({LeastSigBit, GuardBit, RoundBit | StickyBit}) 
+                        casez({LeastSigBit, GuardBit, RoundBit | StickyBit})
                             3'b?01: RoundUp = 1'b1;
                             3'b010: RoundUp = 1'b1;
                             3'b110: RoundUp = 1'b1;
@@ -410,21 +410,21 @@ module rounder(
                 end
             end
             2'b01: begin //RNE
-                casez({NormalizedSign, PreRoundOverflow, LeastSigBit, GuardBit, RoundBit | StickyBit}) 
+                casez({NormalizedSign, PreRoundOverflow, LeastSigBit, GuardBit, RoundBit | StickyBit})
                     5'b0_0_110: RoundUp = 1'b1;
                     5'b0_0_?11: RoundUp = 1'b1;
                     5'b0_1_???: RoundUp = 1'b1;
-                    
+
                     5'b1_0_010: RoundUp = 1'b0;
                     5'b1_0_110: RoundUp = 1'b1;
                     5'b1_0_?11: RoundUp = 1'b1;
                     5'b1_1_???: RoundUp = 1'b1;
 
                     default: RoundUp = 1'b0;
-                endcase 
+                endcase
             end
             2'b11: begin //RP
-                casez({NormalizedSign, PreRoundOverflow, LeastSigBit, GuardBit, RoundBit | StickyBit}) 
+                casez({NormalizedSign, PreRoundOverflow, LeastSigBit, GuardBit, RoundBit | StickyBit})
                     5'b0_0_?01: RoundUp = 1'b1;
                     5'b0_0_010: RoundUp = 1'b1;
                     5'b0_0_110: RoundUp = 1'b1;
@@ -432,7 +432,7 @@ module rounder(
                     5'b0_1_???: RoundUp = 1'b1;
 
                     default: RoundUp = 1'b0;
-                endcase 
+                endcase
             end
             default: RoundUp = 1'b0;
         endcase
@@ -461,7 +461,7 @@ module rounder(
             RoundUpOverflow  = 1'b0;
         end else begin
             if(RoundUp) begin
-                
+
                 //TODO round up logic
                 NormalizedMantisaP1 = NormalizedMantisa[23:13] + {10'b0, 1'b1};
 
@@ -475,11 +475,11 @@ module rounder(
                 end
 
                 InexactRound     = 1'b1;
-                
+
                 //TODO what happens if this overflows the result
                 if(Carry | (&RoundedUpExponent)) begin
                     //TODO always round up
-                    // if(~RZ) begin //If round zero the result is maxnum 
+                    // if(~RZ) begin //If round zero the result is maxnum
                         // RoundedExponent = 5'b11110;
                         // RoundedMantisa  = 10'b1111111111;
                     // end else begin //otherwise inf is produced during multiplication
@@ -502,10 +502,10 @@ module rounder(
             end
         end
     end
-    //TODO There is a chance for a hyper edge case where the sticky bit is active and its being subtracted and the sticky bit and tunkated bits are all 0 maybe 
+    //TODO There is a chance for a hyper edge case where the sticky bit is active and its being subtracted and the sticky bit and tunkated bits are all 0 maybe
     assign InexactTruncate     = GuardBit | RoundBit | StickyBit /*| StickyA | StickyB*/; //Both sticky bits cannot be one at the same time so theres no chance for cancelation
 
-    
+
 endmodule
 
 module specialCaseHandler (
@@ -539,7 +539,7 @@ module specialCaseHandler (
 
     `ifdef DEBUG
     specialCase SpecialCase;
-    `endif 
+    `endif
 
     logic OpAExponentAllOnes,   OpBExponentAllOnes, OpCExponentAllOnes;
     logic OpAExponentZero,      OpBExponentZero;
@@ -572,30 +572,30 @@ module specialCaseHandler (
 
     always_comb begin
         //Zero times inf
-        if (OpAMantisaZero & OpBMantisaZero & 
+        if (OpAMantisaZero & OpBMantisaZero &
             ((OpAExponentZero & OpBExponentAllOnes) | (OpBExponentZero & OpAExponentAllOnes))) begin
-            
+
             result[15:0]            = 16'b0_11111_1000000000; //NAN
             ArithmaticInvalid       = 1'b1;
             flags                   = 4'b1000;
 
             `ifdef DEBUG
             SpecialCase = ZeroTimesInf;
-            `endif 
+            `endif
 
         // if any of inputs are NAN
         end else if (OpANan | OpBNan | OpCNan) begin
-            
+
             result[15:0]            = 16'b0_11111_1000000000; //NAN
             ArithmaticInvalid       = 1'b0;
             flags                   = {expectedFlags[3], 3'b000};
 
             `ifdef DEBUG
             SpecialCase = InputsNaN;
-            `endif 
+            `endif
 
         //If multiplcation results in inf due starting with inf
-        end else if (MultiplicationOperandInf) begin 
+        end else if (MultiplicationOperandInf) begin
 
             //If either OpC is the inverse inf or nan
             if(OpCExponentAllOnes & (AccumulateSubtraction | OpCMantisaNonZero)) begin
@@ -606,7 +606,7 @@ module specialCaseHandler (
 
                 `ifdef DEBUG
                 SpecialCase = CalculatedNaN;
-                `endif 
+                `endif
 
             end else begin
 
@@ -616,7 +616,7 @@ module specialCaseHandler (
 
                 `ifdef DEBUG
                 SpecialCase = MultiplicationOverflow;
-                `endif 
+                `endif
 
             end
         //op C is inf and multiplication edge cases already handled
@@ -628,7 +628,7 @@ module specialCaseHandler (
 
             `ifdef DEBUG
             SpecialCase             = AdditionOverflow;
-            `endif 
+            `endif
 
         //Otherwise use FMA result
         end else begin
@@ -639,7 +639,7 @@ module specialCaseHandler (
 
             `ifdef DEBUG
             SpecialCase = None;
-            `endif 
+            `endif
         end
     end
 
@@ -647,7 +647,7 @@ endmodule
 
 module flagHandler (
     input   logic       OpASignalNan,
-    input   logic       OpBSignalNan, 
+    input   logic       OpBSignalNan,
     input   logic       OpCSignalNan,
 
     input   logic       ArithmaticInvalid,
@@ -666,7 +666,7 @@ module flagHandler (
     assign Invalid      = OpASignalNan | OpBSignalNan | OpCSignalNan | ArithmaticInvalid;
     assign Overflow     = (MultiplicationExponentOverflow | FinalResultInf | NormalizationOverflow | RoundUpOverflow);
     assign Underflow    = /*MultiplicationExponentUnderflow;*/ 1'b0;
-    assign Inexact      = InexactRound | Overflow; 
+    assign Inexact      = InexactRound | Overflow;
 
     assign flags        = {Invalid, Overflow, Underflow, Inexact};
 

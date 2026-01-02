@@ -65,11 +65,11 @@ module csrReadFile #(
 
     `ifdef DEBUG_PRINT
     always_ff @(posedge clk) begin
-        if (CSREn) begin
-            $display("CSR %h, write_en: %b, read_en: %b, read_data: %h, internal_write_en: %b, internal_write_data: %h",
-                        CSRAdr, csr_control[CSRAdr].WriteEn, csr_control[CSRAdr].ReadEn, ReadData,
-                        csr_control[CSRAdr].InternalWriteEn, csr_control[CSRAdr].InternalWriteData);
-        end
+        // if (CSREn) begin
+        //     $display("CSR %h, write_en: %b, read_en: %b, read_data: %h, internal_write_en: %b, internal_write_data: %h",
+        //                 CSRAdr, csr_control[CSRAdr].WriteEn, csr_control[CSRAdr].ReadEn, ReadData,
+        //                 csr_control[CSRAdr].InternalWriteEn, csr_control[CSRAdr].InternalWriteData);
+        // end
         if (CSREn && targetCSR === ZICSRType::validCSRs'('x)) begin
             $display("Invalid CSR address attempted to be accessed: %h", CSRAdr);
             $finish(-1);
