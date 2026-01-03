@@ -20,6 +20,7 @@ module ZICSR_CSRs (
 
     assign ustatus_ctrl.DefaultValue    = '0;               // ustatus
     assign mstatus_ctrl.DefaultValue    = `XLEN'h0000_1880; // mstatus
+    assign mtvec_ctrl.DefaultValue      = `XLEN'h8000_0000;
     assign mhartid_ctrl.DefaultValue    = '0;               // mhartid
 
     assign ustatus_ctrl.WriteEn         = 1'b0;             // ustatus
@@ -36,6 +37,11 @@ module ZICSR_CSRs (
     assign mstatus_ctrl.InternalWriteEn = 1'b0;             // mstatus
     assign mtvec_ctrl.InternalWriteEn   = 1'b0;             // mtvec
     assign mhartid_ctrl.InternalWriteEn = 1'b0;             // mhartid
+
+    assign ustatus_ctrl.InternalWriteData = 'x;             // ustatus
+    assign mstatus_ctrl.InternalWriteData = 'x;             // mstatus
+    assign mtvec_ctrl.InternalWriteData   = 'x;             // mtvec
+    assign mhartid_ctrl.InternalWriteData = 'x;             // mhartid
 
 endmodule
 `endif

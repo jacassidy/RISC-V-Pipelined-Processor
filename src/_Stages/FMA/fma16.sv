@@ -2,15 +2,6 @@
 
 //Conducts result = A * B + C
 
-// typedef enum logic[5:0] {
-//         None,
-//         ZeroTimesInf,
-//         InputsNaN,
-//         CalculatedNaN,
-//         MultiplicationOverflow,
-//         AdditionOverflow
-// } specialCase;
-
 `include "fmaUtils.svh"
 
 module  fma16 (
@@ -638,7 +629,7 @@ module specialCaseHandler (
             flags                   = expectedFlags;
 
             `ifdef DEBUG
-            SpecialCase = None;
+            SpecialCase = NoSpecialCase;
             `endif
         end
     end

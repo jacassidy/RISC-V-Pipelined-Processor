@@ -30,7 +30,7 @@ module ZICNTR_CSRs (
     // Determine values
     assign CycleCSRValueNext                = CycleCSRValue + 1;
     assign TimeCSRValueNext                 = CycleCSRValueNext;
-    assign InsretCSRValueNext               = InsretCSRValue + InstructionRetired;
+    assign InsretCSRValueNext               = InsretCSRValue + 64'(InstructionRetired);
 
     // Assign back next values
     assign rdcycle_ctrl.InternalWriteData   = CycleCSRValueNext [`XLEN-1:0];

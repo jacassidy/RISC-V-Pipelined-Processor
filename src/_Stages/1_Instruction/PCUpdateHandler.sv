@@ -2,13 +2,11 @@
 
 `include "parameters.svh"
 
-import HighLevelControl::*;
-
 module pcUpdateHandler #(
 
 )(
-    input   pcSrc                   PCSrc_R,
-    input   pcSrc                   PCSrcPostConditional_C,
+    input   HighLevelControl::pcSrc                   PCSrc_R,
+    input   HighLevelControl::pcSrc                   PCSrcPostConditional_C,
 
     //****NEEDS HAZZARD TO ASSESS PREDICTION***//
     input   logic                   Predict,
@@ -37,9 +35,9 @@ module pcUpdateHandler #(
         `endif
 
         //C stage first Prio
-        if(PCSrcPostConditional_C == Branch_C || PCSrcPostConditional_C == Jump_C) begin
+        if(PCSrcPostConditional_C == HighLevelControl::Branch_C || PCSrcPostConditional_C == HighLevelControl::Jump_C) begin
 
-            if(PredictionCorrect_C && PCSrc_R == Jump_R && ~PredictionCorrect_R) begin
+            if(PredictionCorrect_C && PCSrc_R == HighLevelControl::Jump_R && ~PredictionCorrect_R) begin
                 //If branch/jump predicted correctly and Jump_R in R stage and R stage jump incorrectly predicted, take the R stage jump
                     PCNext_I = {PCpImm_R[`XLEN-1:1], 1'b0};
 
@@ -55,16 +53,19 @@ module pcUpdateHandler #(
                     FlushRC = 1'b1;
                 `endif
 
-                if(PCSrcPostConditional_C == Branch_C)
+                if(PCSrcPostConditional_C == HighLevelControl::Branch_C) begin
                     PCNext_I = {UpdatedPC_C[`XLEN-1:1], 1'b0};
 
-                if(PCSrcPostConditional_C == Jump_C)
+                end else if(PCSrcPostConditional_C == HighLevelControl::Jump_C) begin
                     PCNext_I = {AluAdd_C[`XLEN-1:1], 1'b0};
+                end else begin
+                    PCNext_I = 'x; // Should never happen
+                end
             end
 
         end
         //R stage second Prio
-        else if(PCSrc_R == Jump_R && ~PredictionCorrect_R) begin
+        else if(PCSrc_R == HighLevelControl::Jump_R && ~PredictionCorrect_R) begin
             //if source is Jump_R but we didnt already correctly predict the jump then jump
                     PCNext_I = {PCpImm_R[`XLEN-1:1], 1'b0};
 
