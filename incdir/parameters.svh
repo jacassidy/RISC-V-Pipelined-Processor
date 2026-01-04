@@ -1,7 +1,7 @@
 `ifndef PROCESSOR_PARAMETERS
 `define PROCESSOR_PARAMETERS
 
-    //`define PIPELINED
+    `define PIPELINED
 
     `define XLEN_32
     //`define XLEN_64        //Used to enable 64 bit mode

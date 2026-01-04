@@ -129,11 +129,10 @@ module computeCore #(
         HighLevelControl::rs1ForwardSrc     Rs1ForwardSrc_C;
         HighLevelControl::rs2ForwardSrc     Rs2ForwardSrc_C;
 
-        logic                               FlushIR, FlushRC, FlushCM;
-        logic                               StallPC, StallIR, StallRC;
+        logic                               FlushIR, FlushRC, FlushRC_Hazzard, FlushRC_Branch;
+        logic                               StallPC, StallIR;
 
         logic                               LoadAfterForward_C;
-        logic[`XLEN-1:0]                    Rd1_PostW;
     `endif
 
     ////                        **** I STAGE ****                       ////
@@ -203,37 +202,38 @@ module computeCore #(
     );
 
     `ifdef PIPELINED
+        assign FlushRC = FlushRC_Hazzard | FlushRC_Branch;
 
         //Data
-        flopRS #(.WIDTH(`XLEN * 3 + $clog2(`WORD_SIZE))) DataFlopRC(.clk, .reset, .stall(StallRC),
+        flopR #(.WIDTH(`XLEN * 3 + $clog2(`WORD_SIZE))) DataFlopRC(.clk, .reset,
                 .D({AluOperandA_R, AluOperandB_R, Passthrough_R, rd1Adr_R}),
                 .Q({AluOperandA_C, AluOperandB_C, Passthrough_C, rd1Adr_C})
             );
 
         //Signals
-        flopRS #(.WIDTH(
-            $bits({PCSrc_R, ConditionalPCSrc_R, AluOperandAForwardEn_R, AluOperandBForwardEn_R, AluOperation_R,
+        flopRF #(.WIDTH(
+            $bits({PCSrc_R, ConditionalPCSrc_R, AluOperation_R, AluOperandAForwardEn_R, AluOperandBForwardEn_R,
                     ComputeSrc_R, ResultSrc_R, TruncType_R})
-        )) SignalFlopRC(.clk, .reset, .stall(StallRC),
-                .D({PCSrc_R, ConditionalPCSrc_R, AluOperandAForwardEn_R, AluOperandBForwardEn_R, AluOperation_R,
+        )) SignalFlopRC(.clk, .reset, .flush(FlushRC),
+                .D({PCSrc_R, ConditionalPCSrc_R, AluOperation_R, AluOperandAForwardEn_R, AluOperandBForwardEn_R,
                     ComputeSrc_R, ResultSrc_R, TruncType_R}),
-                .Q({PCSrc_C, ConditionalPCSrc_C, AluOperandAForwardEn_C, AluOperandBForwardEn_C, AluOperation_C,
+                .Q({PCSrc_C, ConditionalPCSrc_C, AluOperation_C, AluOperandAForwardEn_C, AluOperandBForwardEn_C,
                     ComputeSrc_C, ResultSrc_C, TruncType_C})
             );
 
         //Architectural Signals
-        flopRFS #(.WIDTH(
+        flopRF #(.WIDTH(
             $bits({MemEn_R, MemWriteEn_R, StoreType_R, RegWrite_R, ValidInstruction_R})
-        )) ArchitecturalSignalFlopRC(.clk, .reset, .stall(StallRC), .flush(FlushRC),
+        )) ArchitecturalSignalFlopRC(.clk, .reset, .flush(FlushRC),
                 .D({MemEn_R, MemWriteEn_R, StoreType_R, RegWrite_R, ValidInstruction_R}),
                 .Q({MemEn_C, MemWriteEn_C, StoreType_C, RegWrite_C, ValidInstruction_C})
             );
 
         //ZICSR Signals
         `ifdef ZICSR
-        flopRFS #(.WIDTH(
+        flopRF #(.WIDTH(
             $bits({CSREn_R, CSROp_R})
-        )) ZICSRSignalFlopRC(.clk, .reset, .stall(StallRC), .flush(FlushRC),
+        )) ZICSRSignalFlopRC(.clk, .reset, .flush(FlushRC),
                 .D({CSREn_R, CSROp_R}),
                 .Q({CSREn_C, CSROp_C})
             );
@@ -290,7 +290,6 @@ module computeCore #(
         .Rs1ForwardSrc_C, .Rs2ForwardSrc_C,
         .ComputeResult_M,
         .Rd1_W,
-        .Rd1_PostW,
     `endif
 
     `ifdef ZICNTR
@@ -320,9 +319,9 @@ module computeCore #(
         );
 
         //Architectural Signals
-        flopRF #(.WIDTH(
+        flopR #(.WIDTH(
             $bits({MemEn_C, MemWriteEn_C, MemWriteByteEn_C, RegWrite_C, ValidInstruction_C})
-        )) ArchitecturalSignalFlopCM(.clk, .reset, .flush(FlushCM),
+        )) ArchitecturalSignalFlopCM(.clk, .reset,
                 .D({MemEn_C, MemWriteEn_C, MemWriteByteEn_C, RegWrite_C, ValidInstruction_C}),
                 .Q({MemEn_M, MemWriteEn_M, MemWriteByteEn_M, RegWrite_M, ValidInstruction_M})
         );
@@ -420,16 +419,11 @@ module computeCore #(
     logic PredictionCorrect_C;
 
     `ifdef PIPELINED
-        //Prediction is only ever correct when there was a branch and it is not taken
-        assign PredictionCorrect_C = PCSrcPostConditional_C != HighLevelControl::Branch_C && ConditionalPCSrc_C != HighLevelControl::NO_BRANCH;
+        //Prediction is only ever correct when there was a branch and it is not taken (The next pc should be pc+4)
+        assign PredictionCorrect_C = (PCSrcPostConditional_C == HighLevelControl::PCp4_I);
 
-        hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .rd1Adr_M, .MemEn_C, .RegWrite_C, .RegWrite_M,
-                                .Rs1ForwardSrc_C, .Rs2ForwardSrc_C, .FlushCM, .StallPC, .StallIR, .StallRC);
-
-        flopR #(.WIDTH(`XLEN)) LoadAfterForwardFlop(.clk, .reset,
-                .D(Rd1_W),
-                .Q(Rd1_PostW)
-            );
+        hazzardUnit HazzardUnit(.clk, .reset, .rs1Adr_R, .rs2Adr_R, .rd1Adr_C, .rd1Adr_M, .MemEn_C, .MemWriteEn_C, .RegWrite_C, .RegWrite_M,
+                                .Rs1ForwardSrc_C, .Rs2ForwardSrc_C, .StallPC, .StallIR, .FlushRC(FlushRC_Hazzard));
     `else
         assign PredictionCorrect_C  = 1'b0;
     `endif
@@ -440,7 +434,7 @@ module computeCore #(
             .PredictionCorrect_C, .PCp4_I, .AluAdd_C(AluResult_C), .PCpImm_R, .UpdatedPC_C(Passthrough_C), .PCNext_I
 
             `ifdef PIPELINED
-                , .FlushIR, .FlushRC
+                , .FlushIR, .FlushRC(FlushRC_Branch)
             `endif
 
             );

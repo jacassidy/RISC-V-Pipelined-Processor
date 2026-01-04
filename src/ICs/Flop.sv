@@ -108,8 +108,11 @@ module flopRF #(
 );
 
     always_ff @( posedge clk ) begin
-        if (reset | flush)  Q <= DEFAULT;
-        else                Q <= D;
+        if (reset)  Q <= DEFAULT;
+        else begin
+            if (flush)  Q <= DEFAULT;
+            else        Q <= D;
+        end
     end
 
 endmodule
@@ -128,8 +131,11 @@ module flopRFS #(
 );
 
     always_ff @( posedge clk ) begin
-        if (reset | flush)  Q <= DEFAULT;
-        else if (~stall)    Q <= D;
+        if (reset)  Q <= DEFAULT;
+        else if (~stall) begin
+            if (flush)  Q <= DEFAULT;
+            else        Q <= D;
+        end
     end
 
 endmodule

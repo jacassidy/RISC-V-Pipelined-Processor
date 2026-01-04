@@ -35,16 +35,20 @@ module pcUpdateHandler #(
         `endif
 
         //C stage first Prio
-        if(PCSrcPostConditional_C == HighLevelControl::Branch_C || PCSrcPostConditional_C == HighLevelControl::Jump_C) begin
+        if((PCSrcPostConditional_C == HighLevelControl::Branch_C) | (PCSrcPostConditional_C == HighLevelControl::Jump_C)) begin
 
-            if(PredictionCorrect_C && PCSrc_R == HighLevelControl::Jump_R && ~PredictionCorrect_R) begin
+            if(PredictionCorrect_C) begin
+                if ((PCSrc_R == HighLevelControl::Jump_R) & ~PredictionCorrect_R) begin
                 //If branch/jump predicted correctly and Jump_R in R stage and R stage jump incorrectly predicted, take the R stage jump
                     PCNext_I = {PCpImm_R[`XLEN-1:1], 1'b0};
 
                     `ifdef PIPELINED
                         FlushIR = 1'b1;
                     `endif
-
+                end else begin
+                    // if both correctly predicted or if theres no jump in the R stage then keep pc going
+                    PCNext_I = {PCp4_I[`XLEN-1:1], 1'b0};
+                end
             end else begin
                 //If branch/jump was wrong then itll be flushed, take current
 
@@ -55,7 +59,6 @@ module pcUpdateHandler #(
 
                 if(PCSrcPostConditional_C == HighLevelControl::Branch_C) begin
                     PCNext_I = {UpdatedPC_C[`XLEN-1:1], 1'b0};
-
                 end else if(PCSrcPostConditional_C == HighLevelControl::Jump_C) begin
                     PCNext_I = {AluAdd_C[`XLEN-1:1], 1'b0};
                 end else begin
@@ -63,18 +66,17 @@ module pcUpdateHandler #(
                 end
             end
 
-        end
         //R stage second Prio
-        else if(PCSrc_R == HighLevelControl::Jump_R && ~PredictionCorrect_R) begin
+        end else if((PCSrc_R == HighLevelControl::Jump_R) & ~PredictionCorrect_R) begin
             //if source is Jump_R but we didnt already correctly predict the jump then jump
-                    PCNext_I = {PCpImm_R[`XLEN-1:1], 1'b0};
+            PCNext_I = {PCpImm_R[`XLEN-1:1], 1'b0};
 
-                    `ifdef PIPELINED
-                        FlushIR = 1'b1;
-                    `endif
+            `ifdef PIPELINED
+                FlushIR = 1'b1;
+            `endif
         end else
             //PC + 4 is default
-                    PCNext_I = {PCp4_I[`XLEN-1:1], 1'b0};
+            PCNext_I = {PCp4_I[`XLEN-1:1], 1'b0};
     end
 
 endmodule

@@ -41,7 +41,6 @@ module _CStage (
     input  HighLevelControl::rs2ForwardSrc Rs2ForwardSrc_C,
     input  logic [`XLEN-1:0]              ComputeResult_M,  // from CM regs output (registered)
     input  logic [`XLEN-1:0]              Rd1_W,            // from WStage output
-    input  logic [`XLEN-1:0]              Rd1_PostW,        // from postW flop in computeCore
 `endif
 
 `ifdef ZICNTR
@@ -87,7 +86,6 @@ module _CStage (
                     HighLevelControl::Rs1_NO_FORWARD:       AluHazzardSafeOperandA_C = AluOperandA_C;
                     HighLevelControl::Rs1_ComputeResult:    AluHazzardSafeOperandA_C = ComputeResult_M;
                     HighLevelControl::Rs1_Rd1W:             AluHazzardSafeOperandA_C = Rd1_W;
-                    HighLevelControl::Rs1_Rd1PostW:         AluHazzardSafeOperandA_C = Rd1_PostW;
 
                     default:                                AluHazzardSafeOperandA_C = 'x;
                 endcase
@@ -103,7 +101,6 @@ module _CStage (
                     HighLevelControl::Rs2_NO_FORWARD:       AluHazzardSafeOperandB_C = AluOperandB_C;
                     HighLevelControl::Rs2_ComputeResult:    AluHazzardSafeOperandB_C = ComputeResult_M;
                     HighLevelControl::Rs2_Rd1W:             AluHazzardSafeOperandB_C = Rd1_W;
-                    HighLevelControl::Rs2_Rd1PostW:         AluHazzardSafeOperandB_C = Rd1_PostW;
 
                     default:                                AluHazzardSafeOperandB_C = 'x;
                 endcase
@@ -226,7 +223,6 @@ module _CStage (
                 HighLevelControl::Rs2_NO_FORWARD:       MemWriteDataPreShift_C = Passthrough_C;
                 HighLevelControl::Rs2_ComputeResult:    MemWriteDataPreShift_C = ComputeResult_M;
                 HighLevelControl::Rs2_Rd1W:             MemWriteDataPreShift_C = Rd1_W;
-                HighLevelControl::Rs2_Rd1PostW:         MemWriteDataPreShift_C = Rd1_PostW;
 
                 default:                                MemWriteDataPreShift_C = 'x;
             endcase

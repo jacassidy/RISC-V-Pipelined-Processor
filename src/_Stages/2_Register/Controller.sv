@@ -184,7 +184,7 @@ module controller (
                 `ifdef DEBUG_PRINT
                 if (Instr_R !== 'x && Instr_R !== 0) begin
                     $display("Instruction not implemented: Machine Code (%h)", Instr_R);
-                    $finish(-1);
+                    //$finish(-1);
                 end
                 `endif
             end
