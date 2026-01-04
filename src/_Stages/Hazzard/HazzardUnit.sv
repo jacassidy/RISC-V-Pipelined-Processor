@@ -3,9 +3,7 @@
 `include "parameters.svh"
 
 `ifdef PIPELINED
-module hazzardUnit #(
-
-)(
+module hazzardUnit
     input   logic                               clk,
     input   logic                               reset,
 
