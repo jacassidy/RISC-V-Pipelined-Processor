@@ -37,8 +37,9 @@ module csrReadFile #(
     end
 
     generate
+    // if (1) needed for synthasis
     `define X(name, adr) \
-        begin : gen_``name                                      \
+        if (1) begin : gen_``name                               \
         localparam ZICSRType::validCSRs csr = ZICSRType::name;  \
             flopCSR #(.WIDTH(`XLEN)) CSRFlop (                  \
                 .clk, .reset,                                   \
