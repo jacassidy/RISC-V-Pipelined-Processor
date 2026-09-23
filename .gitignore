@@ -1,1 +1,4 @@
 testing/vsim/work
+.evo/local/
+.evo-build/
+__pycache__/

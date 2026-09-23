@@ -1,0 +1,27 @@
+{
+  "contract": "evolve_cli.external_profile.v1",
+  "target": "verilator-rv-pipelined",
+  "architecture": "x86_64",
+  "physical_risk": "none",
+  "identity": {
+    "probe": {"argv": ["/usr/bin/bash", "__CLONE__/.evo/runner/rv-sim.sh", "identity"], "timeout_seconds": 10},
+    "expected_sha256": "__IDENTITY_SHA256__"
+  },
+  "inputs": [
+    {"name": "workload", "max_bytes": 32, "choices": ["correctness", "rv32-single", "rv32-pipe", "rv64-single", "rv64-pipe", "bench", "lint"]}
+  ],
+  "build": {
+    "command": {"argv": ["/usr/bin/bash", "__CLONE__/.evo/runner/rv-sim.sh", "build"], "working_directory": "{workspace}", "timeout_seconds": 60},
+    "output": ".evo-build/workspace.tar"
+  },
+  "execute": {
+    "argv": ["/usr/bin/bash", "__CLONE__/.evo/runner/rv-sim.sh", "{input:workload}"],
+    "working_directory": "{workspace}",
+    "environment": {"HOME": "__HOME__", "PATH": "/usr/bin:/bin", "VERILATOR": "/usr/bin/verilator", "RVSIM_PYTHON": "/usr/bin/python3"},
+    "timeout_seconds": 300
+  },
+  "diagnostics": {
+    "toolchain": {"argv": ["/usr/bin/bash", "__CLONE__/.evo/runner/rv-sim.sh", "diag-toolchain"], "timeout_seconds": 20, "environment": {"PATH": "/usr/bin:/bin"}},
+    "host": {"argv": ["/usr/bin/bash", "__CLONE__/.evo/runner/rv-sim.sh", "diag-host"], "timeout_seconds": 10, "environment": {"PATH": "/usr/bin:/bin"}}
+  }
+}
